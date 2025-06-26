@@ -12,7 +12,6 @@ export default function Home() {
   const [current, setCurrent] = useState<number>(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Add selected files to the playlist
   const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files).map((file) => ({
@@ -31,15 +30,13 @@ export default function Home() {
     setCurrent((i) => (i - 1 + playlist.length) % playlist.length);
   };
 
-  // Whenever the `current` track changes, reload and play it
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
     audio.pause();
-    // Reset the source
     audio.src = playlist[current]?.url ?? "";
-    audio.load(); // Load the new source
-    audio.play(); // Start playing immediately
+    audio.load();
+    audio.play();
   }, [current, playlist]);
 
   return (
