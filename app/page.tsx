@@ -1,38 +1,73 @@
 "use client";
-import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function Home() {
-  const [response, setResponse] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+type Track = {
+  name: string;
+  url: string;
+};
 
-  const handleClick = async () => {
-    try {
-      const res = await invoke<string>("my_custom_command", {
-        invokeMessage: "Rust is the best",
-      });
-      console.log("Tauri responded:", res);
-      setResponse(res);
-      setError(null);
-    } catch (err: any) {
-      console.error("Tauri error:", err);
-      setError(err.message ?? String(err));
-      setResponse(null);
-    }
+export default function Home() {
+  const [playlist, setPlaylist] = useState<Track[]>([]);
+  const [current, setCurrent] = useState<number>(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Add selected files to the playlist
+  const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files).map((file) => ({
+      name: file.name,
+      url: URL.createObjectURL(file),
+    }));
+    setPlaylist((pl) => [...pl, ...files]);
   };
 
+  const play = () => audioRef.current?.play();
+  const pause = () => audioRef.current?.pause();
+  const next = () => {
+    setCurrent((i) => (i + 1) % playlist.length);
+  };
+  const prev = () => {
+    setCurrent((i) => (i - 1 + playlist.length) % playlist.length);
+  };
+
+  // Whenever the `current` track changes, reload and play it
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.pause();
+    // Reset the source
+    audio.src = playlist[current]?.url ?? "";
+    audio.load(); // Load the new source
+    audio.play(); // Start playing immediately
+  }, [current, playlist]);
+
   return (
-    <div>
-      <h1 className="bg-amber-200 text-4xl">Hello from Tauri + Next.js</h1>
+    <div style={{ padding: 20 }}>
+      <h1>Next.js + Tauri Music Player</h1>
+      <input type="file" accept="audio/*" multiple onChange={addFiles} />
 
-      <Button onClick={handleClick}>Call Rust Command</Button>
+      {playlist.length > 0 && (
+        <>
+          <div style={{ marginTop: 20 }}>
+            <strong>Now Playing:</strong> {playlist[current].name}
+          </div>
 
-      {response && (
-        <p style={{ color: "green" }}>Response from Rust: {response}</p>
+          <audio
+            ref={audioRef}
+            controls
+            style={{ width: "100%", marginTop: 10 }}
+            onEnded={next}
+          />
+
+          <div style={{ marginTop: 10 }}>
+            <Button onClick={prev}>Prev</Button>
+            <Button onClick={play}>Play</Button>
+            <Button onClick={pause}>Pause</Button>
+            <Button onClick={next}>Next</Button>
+          </div>
+        </>
       )}
-
-      {error && <p style={{ color: "red" }}>Error: {error}</p>}
     </div>
   );
 }
