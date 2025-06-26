@@ -5,11 +5,12 @@
 // }
 
 #[tauri::command]
-fn my_custom_command(invoke_message: String) {
+fn my_custom_command(invoke_message: String) -> String {
     println!(
         "I was invoked from JavaScript with message: {}",
         invoke_message
     );
+    format!("Received message: {}", invoke_message)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
