@@ -16,6 +16,14 @@ type Track = {
   album?: string;
 };
 
+type ScannedTrack = {
+  name:   string;
+  path:   string;
+  title?: string;
+  artist?: string;
+  album?: string;
+};
+
 async function filePathToBlobUrl(path: string): Promise<string> {
   const bytes = await readFile(path);
   const ext = path.split(".").pop()?.toLowerCase() ?? "";
@@ -39,18 +47,22 @@ export default function Home() {
   const pickAndScanFolder = async () => {
     const selected = await open({ directory: true });
     if (typeof selected !== "string") return;
-    const scanned = await invoke<Array<{ name: string; path: string }>>(
+    const scanned = await invoke<ScannedTrack[]>(
       "scan_folder",
       { path: selected }
     );
 
     const tracks: Track[] = await Promise.all(
       scanned.map(async (f) => ({
-        name: f.name,
-        path: f.path,
-        url: await filePathToBlobUrl(f.path),
+        name:   f.name,
+        path:   f.path,
+        url:    await filePathToBlobUrl(f.path),
+        title:  f.title,    // ← new!
+        artist: f.artist,   // ← new!
+        album:  f.album,    // ← new!
       }))
     );
+
 
     setPlaylist(tracks);
     setCurrent(0);
@@ -116,7 +128,17 @@ export default function Home() {
         {playlist.length > 0 && (
           <div className="space-y-4">
             <div className="bg-yellow-100 rounded-xl p-3 text-center text-lg font-semibold">
-              Now Playing: {playlist[current].name}
+              <div className="space-y-1">
+                  <div className="text-lg font-semibold">
+                    {playlist[current].title ?? playlist[current].name}
+                  </div>
+                  <div className="text-sm text-teal-700 italic">
+                    {playlist[current].artist ?? "Unknown"}
+                  </div>
+                  <div className="text-sm text-teal-700">
+                    {playlist[current].album ?? ""}
+                  </div>
+                </div>
             </div>
 
             <audio

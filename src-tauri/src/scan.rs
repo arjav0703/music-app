@@ -1,78 +1,61 @@
+//use lofty::{probe,d};
+use lofty::file::TaggedFileExt;
+use lofty::probe::Probe;
+use lofty::tag::Accessor;
+use serde::Serialize;
 use std::fs;
-use std::path::{Path, PathBuf};
-use tauri::{command, AppHandle};
-use walkdir::WalkDir;
-//
-//const AUDIO_EXTENSIONS: &[&str] = &[
-//    "mp3", "wav", "flac", "aac", "ogg", "m4a", "wma", "opus", "aiff", "alac",
-//];
-//
-//#[command]
-//pub async fn scan_folder(path: String, app: AppHandle) -> Result<Vec<(String, String)>, String> {
-//    let path_buf = PathBuf::from(&path);
-//
-//    // path validation
-//    if !path_buf.exists() {
-//        return Err("Path does not exist".into());
-//    }
-//    if !path_buf.is_dir() {
-//        return Err("Path is not a directory".into());
-//    }
-//
-//    let mut audio_files = Vec::new();
-//
-//    // Recursive directory walker
-//    for entry in WalkDir::new(&path)
-//        .follow_links(true)
-//        .into_iter()
-//        .filter_map(|e| e.ok())
-//    {
-//        if entry.file_type().is_file() {
-//            if let Some(ext) = entry.path().extension().and_then(|e| e.to_str()) {
-//            if AUDIO_EXTENSIONS.contains(&ext.to_lowercase().as_str()) {
-//                if let (Some(name), Some(path)) =
-//                    (entry.file_name().to_str(), entry.path().to_str())
-//                {
-//                    audio_files.push((name.to_string(), path.to_string()));
-//                }
-//            }
-//        }
-//    }
-//}
 
-//tauri::async_runtime::spawn(async move {
-//    let _ = app.emit_all(
-//        "scan_result",
-//        format!("Found {} audio files", audio_files.len()),
-//    );
-//});
-//
-//    Ok(audio_files)
-//}
+#[derive(Serialize)]
+pub struct TrackMetadata {
+    pub name: String,
+    pub path: String,
+    pub title: Option<String>,
+    pub artist: Option<String>,
+    pub album: Option<String>,
+}
 
 #[tauri::command]
-pub fn scan_folder(path: String) -> tauri::Result<Vec<ScanEntry>> {
-    let mut entries = Vec::new();
-    for entry in fs::read_dir(path)? {
-        let path = entry?.path();
-        if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
-            if ["mp3", "wav", "flac", "m4a", "ogg"].contains(&ext) {
-                entries.push(ScanEntry {
-                    name: path
-                        .file_name()
-                        .and_then(|s| s.to_str())
-                        .unwrap_or_default()
-                        .to_string(),
-                    path: path.to_string_lossy().to_string(),
-                });
+pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
+    let mut tracks = vec![];
+
+    if let Ok(entries) = fs::read_dir(&path) {
+        for entry in entries.flatten() {
+            let path_buf = entry.path();
+            if path_buf.is_file() {
+                if let Some(ext) = path_buf.extension().and_then(|e| e.to_str()) {
+                    let ext = ext.to_lowercase();
+                    if ["mp3", "flac", "wav", "ogg", "m4a"].contains(&ext.as_str()) {
+                        let file_path = path_buf.to_string_lossy().to_string();
+                        let name = path_buf
+                            .file_name()
+                            .unwrap_or_default()
+                            .to_string_lossy()
+                            .to_string();
+
+                        let mut title = None;
+                        let mut artist = None;
+                        let mut album = None;
+
+                        if let Ok(tagged_file) = Probe::open(&file_path).and_then(|p| p.read()) {
+                            if let Some(tag) = tagged_file.primary_tag() {
+                                title = tag.title().map(|s| s.to_string());
+                                artist = tag.artist().map(|s| s.to_string());
+                                album = tag.album().map(|s| s.to_string());
+                            }
+                        }
+
+                        tracks.push(TrackMetadata {
+                            name,
+                            path: file_path,
+                            title,
+                            artist,
+                            album,
+                        });
+                    }
+                }
             }
         }
     }
-    Ok(entries)
-}
 
-#[derive(serde::Serialize)]
-pub struct ScanEntry {
-    name: String,
-    path: String,
+    tracks
 }
