@@ -3,7 +3,6 @@ use lofty::probe::Probe;
 use lofty::tag::Accessor;
 use rayon::prelude::*;
 use serde::Serialize;
-// use std::path::Path;
 use tauri::command;
 use walkdir::WalkDir;
 
@@ -14,51 +13,61 @@ pub struct TrackMetadata {
     pub title: Option<String>,
     pub artist: Option<String>,
     pub album: Option<String>,
+    pub cover_data_url: Option<String>,
 }
 
 #[command]
 pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
     const EXTENSIONS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
 
-    // Walk only a single directory (depth = 1). Parallelize via par_bridge.
     WalkDir::new(&path)
         .max_depth(2)
         .into_iter()
-        .filter_map(Result::ok) // drop unreadable entries
-        .filter(|e| e.file_type().is_file()) // only files
-        .par_bridge() // turn into a parallel iterator
+        .filter_map(Result::ok)
+        .filter(|e| e.file_type().is_file())
+        .par_bridge()
         .filter_map(|entry| {
             let p = entry.path();
-
             let ext_ok = p
                 .extension()
                 .and_then(|e| e.to_str())
-                .map(|s| s.eq_ignore_ascii_case(s) && EXTENSIONS.contains(&s))
+                .map(|s| EXTENSIONS.iter().any(|&x| x.eq_ignore_ascii_case(s)))
                 .unwrap_or(false);
             if !ext_ok {
                 return None;
             }
 
-            // capture the file name + full path
             let name = p
                 .file_name()
                 .map(|os| os.to_string_lossy().into_owned())
                 .unwrap_or_default();
+
             let full_path = p.to_string_lossy().into_owned();
 
-            // read tags
-            let (title, artist, album) = Probe::open(p)
+            // Read the tags + picture
+            let (title, artist, album, cover_data_url) = Probe::open(p)
                 .and_then(|prb| prb.read())
                 .ok()
                 .and_then(|tagged| tagged.primary_tag().cloned())
                 .map(|tag| {
-                    (
-                        tag.title().map(String::from),
-                        tag.artist().map(String::from),
-                        tag.album().map(String::from),
-                    )
+                    let title = tag.title().map(String::from);
+                    let artist = tag.artist().map(String::from);
+                    let album = tag.album().map(String::from);
+
+                    let cover_data_url = tag.pictures().first().map(|pic| {
+                        let mime = pic
+                            .mime_type() // Option<&MimeType>
+                            .map(|m| m.to_string()) // Option<String>
+                            .unwrap_or_else(||                // String
+                                "application/octet-stream".into());
+
+                        let b64 = base64::encode(pic.data());
+                        format!("data:{};base64,{}", mime, b64)
+                    });
+
+                    (title, artist, album, cover_data_url)
                 })
-                .unwrap_or((None, None, None));
+                .unwrap_or((None, None, None, None));
 
             Some(TrackMetadata {
                 name,
@@ -66,6 +75,7 @@ pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
                 title,
                 artist,
                 album,
+                cover_data_url,
             })
         })
         .collect()

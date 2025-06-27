@@ -14,14 +14,16 @@ type Track = {
   title?: string;
   artist?: string;
   album?: string;
+  cover_data_url?: string;
 };
 
 type ScannedTrack = {
-  name:   string;
-  path:   string;
+  name: string;
+  path: string;
   title?: string;
   artist?: string;
   album?: string;
+  cover_data_url?: string;
 };
 
 async function filePathToBlobUrl(path: string): Promise<string> {
@@ -47,22 +49,21 @@ export default function Home() {
   const pickAndScanFolder = async () => {
     const selected = await open({ directory: true });
     if (typeof selected !== "string") return;
-    const scanned = await invoke<ScannedTrack[]>(
-      "scan_folder",
-      { path: selected }
-    );
+    const scanned = await invoke<ScannedTrack[]>("scan_folder", {
+      path: selected,
+    });
 
     const tracks: Track[] = await Promise.all(
       scanned.map(async (f) => ({
-        name:   f.name,
-        path:   f.path,
-        url:    await filePathToBlobUrl(f.path),
-        title:  f.title,
+        name: f.name,
+        path: f.path,
+        url: await filePathToBlobUrl(f.path),
+        title: f.title,
         artist: f.artist,
-        album:  f.album,
-      }))
+        album: f.album,
+        cover_data_url: f.cover_data_url,
+      })),
     );
-
 
     setPlaylist(tracks);
     setCurrent(0);
@@ -84,7 +85,7 @@ export default function Home() {
     setCurrent((i) => (playlist.length ? (i + 1) % playlist.length : 0));
   const prev = () =>
     setCurrent((i) =>
-      playlist.length ? (i - 1 + playlist.length) % playlist.length : 0
+      playlist.length ? (i - 1 + playlist.length) % playlist.length : 0,
     );
 
   useEffect(() => {
@@ -128,17 +129,29 @@ export default function Home() {
         {playlist.length > 0 && (
           <div className="space-y-4">
             <div className="bg-yellow-100 rounded-xl p-3 text-center text-lg font-semibold">
-              <div className="space-y-1">
-                  <div className="text-lg font-semibold">
-                    {playlist[current].title ?? playlist[current].name}
+              <div className="flex flex-col items-center space-y-2">
+                {playlist[current].cover_data_url ? (
+                  <img
+                    src={playlist[current].cover_data_url}
+                    alt="Album Art"
+                    className="w-48 h-48 rounded-xl object-cover border border-yellow-300 shadow-md"
+                  />
+                ) : (
+                  <div className="w-48 h-48 bg-yellow-200 rounded-xl flex items-center justify-center text-yellow-600 font-bold text-sm border border-dashed">
+                    No Cover
                   </div>
-                  <div className="text-sm text-teal-700 italic">
-                    {playlist[current].artist ?? "Unknown"}
-                  </div>
-                  <div className="text-sm text-teal-700">
-                    {playlist[current].album ?? ""}
-                  </div>
+                )}
+
+                <div className="text-lg font-semibold">
+                  {playlist[current].title ?? playlist[current].name}
                 </div>
+                <div className="text-sm text-teal-700 italic">
+                  {playlist[current].artist ?? "Unknown Artist"}
+                </div>
+                <div className="text-sm text-teal-700">
+                  {playlist[current].album ?? ""}
+                </div>
+              </div>
             </div>
 
             <audio
