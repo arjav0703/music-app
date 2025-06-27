@@ -1,9 +1,11 @@
-//use lofty::{probe,d};
 use lofty::file::TaggedFileExt;
 use lofty::probe::Probe;
 use lofty::tag::Accessor;
+use rayon::prelude::*;
 use serde::Serialize;
-use std::fs;
+// use std::path::Path;
+use tauri::command;
+use walkdir::WalkDir;
 
 #[derive(Serialize)]
 pub struct TrackMetadata {
@@ -14,49 +16,57 @@ pub struct TrackMetadata {
     pub album: Option<String>,
 }
 
-#[tauri::command]
+#[command]
 pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
-    let mut tracks = vec![];
+    const EXTENSIONS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
 
-    if let Ok(entries) = fs::read_dir(&path) {
-        for entry in entries.flatten() {
-            let path_buf = entry.path();
-            if path_buf.is_file() {
-                if let Some(ext) = path_buf.extension().and_then(|e| e.to_str()) {
-                    let ext = ext.to_lowercase();
-                    if ["mp3", "flac", "wav", "ogg", "m4a"].contains(&ext.as_str()) {
-                        let file_path = path_buf.to_string_lossy().to_string();
-                        let name = path_buf
-                            .file_name()
-                            .unwrap_or_default()
-                            .to_string_lossy()
-                            .to_string();
+    // Walk only a single directory (depth = 1). Parallelize via par_bridge.
+    WalkDir::new(&path)
+        .max_depth(2)
+        .into_iter()
+        .filter_map(Result::ok) // drop unreadable entries
+        .filter(|e| e.file_type().is_file()) // only files
+        .par_bridge() // turn into a parallel iterator
+        .filter_map(|entry| {
+            let p = entry.path();
 
-                        let mut title = None;
-                        let mut artist = None;
-                        let mut album = None;
-
-                        if let Ok(tagged_file) = Probe::open(&file_path).and_then(|p| p.read()) {
-                            if let Some(tag) = tagged_file.primary_tag() {
-                                title = tag.title().map(|s| s.to_string());
-                                artist = tag.artist().map(|s| s.to_string());
-                                album = tag.album().map(|s| s.to_string());
-                            }
-                        }
-
-                        tracks.push(TrackMetadata {
-                            name,
-                            path: file_path,
-                            title,
-                            artist,
-                            album,
-                        });
-                    }
-                }
+            let ext_ok = p
+                .extension()
+                .and_then(|e| e.to_str())
+                .map(|s| s.eq_ignore_ascii_case(s) && EXTENSIONS.contains(&s))
+                .unwrap_or(false);
+            if !ext_ok {
+                return None;
             }
-        }
-    }
 
-    tracks
+            // capture the file name + full path
+            let name = p
+                .file_name()
+                .map(|os| os.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            let full_path = p.to_string_lossy().into_owned();
+
+            // read tags
+            let (title, artist, album) = Probe::open(p)
+                .and_then(|prb| prb.read())
+                .ok()
+                .and_then(|tagged| tagged.primary_tag().cloned())
+                .map(|tag| {
+                    (
+                        tag.title().map(String::from),
+                        tag.artist().map(String::from),
+                        tag.album().map(String::from),
+                    )
+                })
+                .unwrap_or((None, None, None));
+
+            Some(TrackMetadata {
+                name,
+                path: full_path,
+                title,
+                artist,
+                album,
+            })
+        })
+        .collect()
 }
-// 
