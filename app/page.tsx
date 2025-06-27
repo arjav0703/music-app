@@ -42,9 +42,13 @@ async function filePathToBlobUrl(path: string): Promise<string> {
 }
 
 export default function Home() {
+  const audioRef = useRef<HTMLAudioElement>(null);
+
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
   const [playlist, setPlaylist] = useState<Track[]>([]);
   const [current, setCurrent] = useState(0);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   const pickAndScanFolder = async () => {
     const selected = await open({ directory: true });
@@ -91,6 +95,10 @@ export default function Home() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || playlist.length === 0) return;
+
+    const updateTime = () => setCurrentTime(audio.currentTime);
+    const updateDuration = () => setDuration(audio.duration || 0);
+
     audio.pause();
     audio.src = playlist[current].url;
     audio.load();
@@ -99,97 +107,140 @@ export default function Home() {
     });
   }, [current, playlist]);
 
+  const handleSeek = (e: React.FormEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.currentTarget.value);
+    if (audioRef.current) {
+      audioRef.current.currentTime = value;
+      setCurrentTime(value);
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-beige-100 text-teal-900 p-8 font-sans">
-      <div className="max-w-xl mx-auto bg-yellow-50 rounded-2xl shadow-xl p-6 space-y-6 border border-yellow-200">
-        <h1 className="text-2xl font-bold text-center text-teal-800">
-          🎵 Cozy Tauri Music Player
-        </h1>
+    <main className="min-h-screen flex flex-col bg-beige-100 text-teal-900 font-sans">
+      <div className="flex-1 p-8 overflow-y-auto">
+        <div className="max-w-xl mx-auto bg-yellow-50 rounded-2xl shadow-xl p-6 space-y-6 border border-yellow-200">
+          <h1 className="text-2xl font-bold text-center text-teal-800">
+            🎵 Cozy Tauri Music Player
+          </h1>
 
-        <div className="flex justify-between gap-2">
-          <Button
-            onClick={pickAndScanFolder}
-            className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
-          >
-            <FolderOpen className="mr-2 w-4 h-4" /> Scan Folder
-          </Button>
+          <div className="flex justify-between gap-2">
+            <Button
+              onClick={pickAndScanFolder}
+              className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
+            >
+              <FolderOpen className="mr-2 w-4 h-4" /> Scan Folder
+            </Button>
 
-          <label className="flex-1 cursor-pointer bg-yellow-300 hover:bg-yellow-400 text-teal-900 font-medium text-center py-2 px-4 rounded-lg transition duration-150">
-            <input
-              type="file"
-              accept="audio/*"
-              multiple
-              onChange={addFiles}
-              className="hidden"
-            />
-            Add Files
-          </label>
-        </div>
+            <label className="flex-1 cursor-pointer bg-yellow-300 hover:bg-yellow-400 text-teal-900 font-medium text-center py-2 px-4 rounded-lg transition duration-150">
+              <input
+                type="file"
+                accept="audio/*"
+                multiple
+                onChange={addFiles}
+                className="hidden"
+              />
+              Add Files
+            </label>
+          </div>
 
-        {playlist.length > 0 && (
-          <div className="space-y-4">
+          {playlist.length > 0 && (
             <div className="bg-yellow-100 rounded-xl p-3 text-center text-lg font-semibold">
-              <div className="flex flex-col items-center space-y-2">
-                {playlist[current].cover_data_url ? (
-                  <img
-                    src={playlist[current].cover_data_url}
-                    alt="Album Art"
-                    className="w-48 h-48 rounded-xl object-cover border border-yellow-300 shadow-md"
-                  />
-                ) : (
-                  <div className="w-48 h-48 bg-yellow-200 rounded-xl flex items-center justify-center text-yellow-600 font-bold text-sm border border-dashed">
-                    No Cover
-                  </div>
-                )}
+              Loaded {playlist.length} tracks
+            </div>
+          )}
+        </div>
+      </div>
 
-                <div className="text-lg font-semibold">
+      {/* bottom bar */}
+      {playlist.length > 0 && (
+        <footer className="sticky bottom-0 left-0 w-full bg-teal-800 text-white border-t border-teal-700 shadow-inner z-10">
+          <div className="max-w-xl mx-auto p-4 flex flex-col gap-3">
+            {/* Track info */}
+            <div className="flex items-center gap-4">
+              {playlist[current].cover_data_url ? (
+                <img
+                  src={playlist[current].cover_data_url}
+                  alt="Cover"
+                  className="w-12 h-12 rounded-md object-cover border border-teal-500"
+                />
+              ) : (
+                <div className="w-12 h-12 bg-teal-600 rounded-md flex items-center justify-center text-xs">
+                  No Art
+                </div>
+              )}
+              <div className="truncate">
+                <div className="font-semibold text-sm truncate">
                   {playlist[current].title ?? playlist[current].name}
                 </div>
-                <div className="text-sm text-teal-700 italic">
+                <div className="text-xs text-teal-200 truncate">
                   {playlist[current].artist ?? "Unknown Artist"}
-                </div>
-                <div className="text-sm text-teal-700">
-                  {playlist[current].album ?? ""}
                 </div>
               </div>
             </div>
 
-            <audio
-              ref={audioRef}
-              controls
-              onEnded={next}
-              className="w-full rounded-lg"
-            />
-
-            <div className="flex justify-center gap-4 pt-2">
-              <Button
-                onClick={prev}
-                className="bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <SkipBack className="w-5 h-5" />
-              </Button>
-              <Button
-                onClick={play}
-                className="bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <Play className="w-5 h-5" />
-              </Button>
-              <Button
-                onClick={pause}
-                className="bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <Pause className="w-5 h-5" />
-              </Button>
-              <Button
-                onClick={next}
-                className="bg-teal-500 hover:bg-teal-600 text-white"
-              >
-                <SkipForward className="w-5 h-5" />
-              </Button>
+            {/* controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3">
+                <Button
+                  onClick={prev}
+                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
+                  size="icon"
+                >
+                  <SkipBack className="w-5 h-5" />
+                </Button>
+                <Button
+                  onClick={play}
+                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
+                  size="icon"
+                >
+                  <Play className="w-5 h-5 text-white" />
+                </Button>
+                <Button
+                  onClick={pause}
+                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
+                  size="icon"
+                >
+                  <Pause className="w-5 h-5 text-white" />
+                </Button>
+                <Button
+                  onClick={next}
+                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
+                  size="icon"
+                >
+                  <SkipForward className="w-5 h-5 text-white" />
+                </Button>
+              </div>
+              <div className="text-xs font-mono">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </div>
             </div>
+
+            {/* Seek bar */}
+            <input
+              type="range"
+              min={0}
+              max={duration || 0}
+              step={0.1}
+              value={currentTime}
+              onChange={handleSeek}
+              className="w-full h-2 bg-teal-600 rounded-lg appearance-none cursor-pointer"
+            />
           </div>
-        )}
-      </div>
+
+          {/* Hidden audio element */}
+          <audio ref={audioRef} onEnded={next} className="hidden" />
+        </footer>
+      )}
     </main>
   );
+}
+
+function formatTime(sec: number): string {
+  const m = Math.floor(sec / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = Math.floor(sec % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${m}:${s}`;
 }
