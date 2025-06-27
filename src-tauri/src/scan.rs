@@ -50,12 +50,11 @@ use walkdir::WalkDir;
 //    Ok(audio_files)
 //}
 
-#[command]
+#[tauri::command]
 pub fn scan_folder(path: String) -> tauri::Result<Vec<ScanEntry>> {
     let mut entries = Vec::new();
     for entry in fs::read_dir(path)? {
-        let entry = entry?;
-        let path = entry.path();
+        let path = entry?.path();
         if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
             if ["mp3", "wav", "flac", "m4a", "ogg"].contains(&ext) {
                 entries.push(ScanEntry {
@@ -65,7 +64,7 @@ pub fn scan_folder(path: String) -> tauri::Result<Vec<ScanEntry>> {
                         .unwrap_or_default()
                         .to_string(),
                     path: path.to_string_lossy().to_string(),
-                })
+                });
             }
         }
     }

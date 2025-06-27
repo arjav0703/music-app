@@ -4,57 +4,61 @@ import { useState, useRef, useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
+import { readFile } from '@tauri-apps/plugin-fs';
 
 type Track = {
   name: string;
-  url: string;         // e.g. file://… or blob://…
-  path?: string;       // real fs path on disk
+  url: string;   // file://… URI to play
+  path?: string; // real FS path
 };
+
+async function filePathToBlobUrl(path: string): Promise<string> {
+  const bytes = await readFile(path);
+  // guess mime type
+  const ext = path.split(".").pop()?.toLowerCase() ?? "";
+  const mime = { mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", flac: "audio/flac", m4a: "audio/mp4" }[ext] || "application/octet-stream";
+  // build a blob and blob‐URL
+  const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+  return URL.createObjectURL(blob);
+}
 
 export default function Home() {
   const [playlist, setPlaylist] = useState<Track[]>([]);
-  const [current, setCurrent] = useState<number>(0);
+  const [current, setCurrent] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
+  // 1) Pick a folder via the native dialog, then scan it on the backend
   const pickAndScanFolder = async () => {
-    const selected = await open({
-      directory: true,
-      multiple: false,
-      // you can also set defaultPath…
-    });
+    const selected = await open({ directory: true });
     if (typeof selected !== "string") return;
+    const scanned = await invoke<Array<{ name: string; path: string }>>("scan_folder", { path: selected });
 
-    try {
-      // `fn scan_folder(path: String) -> Vec<MyFile>`
-      const scanned = await invoke<
-        Array<{ name: string; path: string }>
-      >("scan_folder", { path: selected });
-
-      const tracks: Track[] = scanned.map((f) => ({
+    // for each file, read it into a blob URL
+    const tracks: Track[] = await Promise.all(
+      scanned.map(async (f) => ({
         name: f.name,
         path: f.path,
-        url: `file://${f.path}`,
-      }));
+        url: await filePathToBlobUrl(f.path),
+      }))
+    );
 
-      setPlaylist(tracks);
-      setCurrent(0);
-    } catch (err) {
-      console.error("scan_folder failed:", err);
-    }
+    setPlaylist(tracks);
+    setCurrent(0);
   };
 
+
+  // 2) Add individual files from an <input>
   const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const newTracks: Track[] = Array.from(files).map((file) => ({
+    if (!files) return;
+    const newTracks = Array.from(files).map((file) => ({
       name: file.name,
       url: URL.createObjectURL(file),
     }));
-
     setPlaylist((pl) => [...pl, ...newTracks]);
   };
 
+  // 3) Playback controls
   const play = () => audioRef.current?.play();
   const pause = () => audioRef.current?.pause();
   const next = () =>
@@ -64,10 +68,10 @@ export default function Home() {
       playlist.length ? (i - 1 + playlist.length) % playlist.length : 0
     );
 
+  // whenever current or playlist changes, load & play
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || playlist.length === 0) return;
-
     audio.pause();
     audio.src = playlist[current].url;
     audio.load();
@@ -80,7 +84,7 @@ export default function Home() {
     <div style={{ padding: 20 }}>
       <h1>Next.js + Tauri Music Player</h1>
 
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ margin: "20px 0" }}>
         <Button onClick={pickAndScanFolder}>Scan Folder</Button>
       </div>
 
