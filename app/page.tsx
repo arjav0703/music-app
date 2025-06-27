@@ -4,20 +4,29 @@ import { useState, useRef, useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { Button } from "@/components/ui/button";
-import { readFile } from '@tauri-apps/plugin-fs';
+import { readFile } from "@tauri-apps/plugin-fs";
+import { SkipBack, SkipForward, Pause, Play, FolderOpen } from "lucide-react";
 
 type Track = {
   name: string;
-  url: string;   // file://… URI to play
-  path?: string; // real FS path
+  url: string;
+  path?: string;
+  title?: string;
+  artist?: string;
+  album?: string;
 };
 
 async function filePathToBlobUrl(path: string): Promise<string> {
   const bytes = await readFile(path);
-  // guess mime type
   const ext = path.split(".").pop()?.toLowerCase() ?? "";
-  const mime = { mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", flac: "audio/flac", m4a: "audio/mp4" }[ext] || "application/octet-stream";
-  // build a blob and blob‐URL
+  const mime =
+    {
+      mp3: "audio/mpeg",
+      wav: "audio/wav",
+      ogg: "audio/ogg",
+      flac: "audio/flac",
+      m4a: "audio/mp4",
+    }[ext] || "application/octet-stream";
   const blob = new Blob([new Uint8Array(bytes)], { type: mime });
   return URL.createObjectURL(blob);
 }
@@ -27,13 +36,14 @@ export default function Home() {
   const [current, setCurrent] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // 1) Pick a folder via the native dialog, then scan it on the backend
   const pickAndScanFolder = async () => {
     const selected = await open({ directory: true });
     if (typeof selected !== "string") return;
-    const scanned = await invoke<Array<{ name: string; path: string }>>("scan_folder", { path: selected });
+    const scanned = await invoke<Array<{ name: string; path: string }>>(
+      "scan_folder",
+      { path: selected }
+    );
 
-    // for each file, read it into a blob URL
     const tracks: Track[] = await Promise.all(
       scanned.map(async (f) => ({
         name: f.name,
@@ -46,8 +56,6 @@ export default function Home() {
     setCurrent(0);
   };
 
-
-  // 2) Add individual files from an <input>
   const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
@@ -58,7 +66,6 @@ export default function Home() {
     setPlaylist((pl) => [...pl, ...newTracks]);
   };
 
-  // 3) Playback controls
   const play = () => audioRef.current?.play();
   const pause = () => audioRef.current?.pause();
   const next = () =>
@@ -68,7 +75,6 @@ export default function Home() {
       playlist.length ? (i - 1 + playlist.length) % playlist.length : 0
     );
 
-  // whenever current or playlist changes, load & play
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || playlist.length === 0) return;
@@ -81,42 +87,74 @@ export default function Home() {
   }, [current, playlist]);
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Next.js + Tauri Music Player</h1>
+    <main className="min-h-screen bg-beige-100 text-teal-900 p-8 font-sans">
+      <div className="max-w-xl mx-auto bg-yellow-50 rounded-2xl shadow-xl p-6 space-y-6 border border-yellow-200">
+        <h1 className="text-2xl font-bold text-center text-teal-800">
+          🎵 Cozy Tauri Music Player
+        </h1>
 
-      <div style={{ margin: "20px 0" }}>
-        <Button onClick={pickAndScanFolder}>Scan Folder</Button>
+        <div className="flex justify-between gap-2">
+          <Button
+            onClick={pickAndScanFolder}
+            className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
+          >
+            <FolderOpen className="mr-2 w-4 h-4" /> Scan Folder
+          </Button>
+
+          <label className="flex-1 cursor-pointer bg-yellow-300 hover:bg-yellow-400 text-teal-900 font-medium text-center py-2 px-4 rounded-lg transition duration-150">
+            <input
+              type="file"
+              accept="audio/*"
+              multiple
+              onChange={addFiles}
+              className="hidden"
+            />
+            Add Files
+          </label>
+        </div>
+
+        {playlist.length > 0 && (
+          <div className="space-y-4">
+            <div className="bg-yellow-100 rounded-xl p-3 text-center text-lg font-semibold">
+              Now Playing: {playlist[current].name}
+            </div>
+
+            <audio
+              ref={audioRef}
+              controls
+              onEnded={next}
+              className="w-full rounded-lg"
+            />
+
+            <div className="flex justify-center gap-4 pt-2">
+              <Button
+                onClick={prev}
+                className="bg-teal-500 hover:bg-teal-600 text-white"
+              >
+                <SkipBack className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={play}
+                className="bg-teal-500 hover:bg-teal-600 text-white"
+              >
+                <Play className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={pause}
+                className="bg-teal-500 hover:bg-teal-600 text-white"
+              >
+                <Pause className="w-5 h-5" />
+              </Button>
+              <Button
+                onClick={next}
+                className="bg-teal-500 hover:bg-teal-600 text-white"
+              >
+                <SkipForward className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
-
-      <input
-        type="file"
-        accept="audio/*"
-        multiple
-        onChange={addFiles}
-        style={{ marginBottom: 20 }}
-      />
-
-      {playlist.length > 0 && (
-        <>
-          <div>
-            <strong>Now Playing:</strong> {playlist[current].name}
-          </div>
-
-          <audio
-            ref={audioRef}
-            controls
-            style={{ width: "100%", marginTop: 10 }}
-            onEnded={next}
-          />
-
-          <div style={{ marginTop: 10, display: "flex", gap: 10 }}>
-            <Button onClick={prev}>Prev</Button>
-            <Button onClick={play}>Play</Button>
-            <Button onClick={pause}>Pause</Button>
-            <Button onClick={next}>Next</Button>
-          </div>
-        </>
-      )}
-    </div>
+    </main>
   );
 }
