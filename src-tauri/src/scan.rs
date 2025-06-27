@@ -59,3 +59,4 @@ pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
 
     tracks
 }
+// 

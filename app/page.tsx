@@ -57,9 +57,9 @@ export default function Home() {
         name:   f.name,
         path:   f.path,
         url:    await filePathToBlobUrl(f.path),
-        title:  f.title,    // ← new!
-        artist: f.artist,   // ← new!
-        album:  f.album,    // ← new!
+        title:  f.title,
+        artist: f.artist,
+        album:  f.album,
       }))
     );
 
