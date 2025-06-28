@@ -3,9 +3,16 @@
 import { useState, useRef, useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { Button } from "@/components/ui/button";
 import { readFile } from "@tauri-apps/plugin-fs";
-import { SkipBack, SkipForward, Pause, Play, FolderOpen } from "lucide-react";
+import { load, Store } from "@tauri-apps/plugin-store";
+import { Button } from "@/components/ui/button";
+import {
+  SkipBack,
+  SkipForward,
+  Pause,
+  Play,
+  FolderOpen,
+} from "lucide-react";
 
 type Track = {
   name: string;
@@ -26,6 +33,16 @@ type ScannedTrack = {
   cover_data_url?: string;
 };
 
+function formatTime(sec: number): string {
+  const m = Math.floor(sec / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = Math.floor(sec % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${m}:${s}`;
+}
+
 async function filePathToBlobUrl(path: string): Promise<string> {
   const bytes = await readFile(path);
   const ext = path.split(".").pop()?.toLowerCase() ?? "";
@@ -42,17 +59,54 @@ async function filePathToBlobUrl(path: string): Promise<string> {
 }
 
 export default function Home() {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const [store, setStore] = useState<Store | null>(null);
 
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playlist, setPlaylist] = useState<Track[]>([]);
+  const [current, setCurrent] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  const [playlist, setPlaylist] = useState<Track[]>([]);
-  const [current, setCurrent] = useState(0);
+  useEffect(() => {
+    load("store.json", { autoSave: false }).then(setStore);
+  }, []);
 
+  useEffect(() => {
+    if (!store) return;
+    (async () => {
+      const savedList = (await store.get<Track[]>("playlist")) ?? [];
+      const savedIdx  = (await store.get<number>("current")) ?? 0;
+
+      if (savedList.length) {
+        // Mark the callback `async` and use Promise.all
+        const rebuilt = await Promise.all(
+          savedList.map(async (t) =>
+            t.path
+              ? { ...t, url: await filePathToBlobUrl(t.path) }
+              : t
+          )
+        );
+
+        setPlaylist(rebuilt);
+        setCurrent(savedIdx);
+      }
+    })();
+  }, [store]);
+
+
+  const persist = async (plist: Track[], idx: number) => {
+    if (!store) return;
+    await store.set("playlist", plist);
+    await store.set("current", idx);
+    await store.save();
+  };
+
+  // --- action handlers ---
   const pickAndScanFolder = async () => {
+    if (!store) return;
     const selected = await open({ directory: true });
     if (typeof selected !== "string") return;
+
     const scanned = await invoke<ScannedTrack[]>("scan_folder", {
       path: selected,
     });
@@ -66,11 +120,12 @@ export default function Home() {
         artist: f.artist,
         album: f.album,
         cover_data_url: f.cover_data_url,
-      })),
+      }))
     );
 
     setPlaylist(tracks);
     setCurrent(0);
+    persist(tracks, 0);
   };
 
   const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,40 +135,53 @@ export default function Home() {
       name: file.name,
       url: URL.createObjectURL(file),
     }));
-    setPlaylist((pl) => [...pl, ...newTracks]);
+    const updated = [...playlist, ...newTracks];
+    setPlaylist(updated);
+    persist(updated, current);
   };
 
   const play = () => audioRef.current?.play();
   const pause = () => audioRef.current?.pause();
-  const next = () =>
-    setCurrent((i) => (playlist.length ? (i + 1) % playlist.length : 0));
-  const prev = () =>
-    setCurrent((i) =>
-      playlist.length ? (i - 1 + playlist.length) % playlist.length : 0,
-    );
 
+  const next = () => {
+    const nextIdx = playlist.length
+      ? (current + 1) % playlist.length
+      : 0;
+    setCurrent(nextIdx);
+    persist(playlist, nextIdx);
+  };
+
+  const prev = () => {
+    const prevIdx = playlist.length
+      ? (current - 1 + playlist.length) % playlist.length
+      : 0;
+    setCurrent(prevIdx);
+    persist(playlist, prevIdx);
+  };
+
+  const handleSeek = (e: React.FormEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.currentTarget.value);
+    if (audioRef.current) audioRef.current.currentTime = val;
+    setCurrentTime(val);
+  };
+
+  // sync audio element on playlist/current change
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || playlist.length === 0) return;
-
-    const updateTime = () => setCurrentTime(audio.currentTime);
-    const updateDuration = () => setDuration(audio.duration || 0);
-
+    if (!audio || !playlist.length) return;
     audio.pause();
     audio.src = playlist[current].url;
     audio.load();
-    audio.play().catch((e) => {
-      console.warn("Autoplay prevented:", e);
-    });
+    audio.play().catch(() => {});
+    const onTime = () => setCurrentTime(audio.currentTime);
+    const onMeta = () => setDuration(audio.duration || 0);
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("loadedmetadata", onMeta);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("loadedmetadata", onMeta);
+    };
   }, [current, playlist]);
-
-  const handleSeek = (e: React.FormEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.currentTarget.value);
-    if (audioRef.current) {
-      audioRef.current.currentTime = value;
-      setCurrentTime(value);
-    }
-  };
 
   return (
     <main className="min-h-screen flex flex-col bg-beige-100 text-teal-900 font-sans">
@@ -128,10 +196,11 @@ export default function Home() {
               onClick={pickAndScanFolder}
               className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
             >
-              <FolderOpen className="mr-2 w-4 h-4" /> Scan Folder
+              <FolderOpen className="mr-2 w-4 h-4" />
+              Scan Folder
             </Button>
 
-            <label className="flex-1 cursor-pointer bg-yellow-300 hover:bg-yellow-400 text-teal-900 font-medium text-center py-2 px-4 rounded-lg transition duration-150">
+            <label className="flex-1 cursor-pointer bg-yellow-300 hover:bg-yellow-400 text-teal-900 font-medium text-center py-2 px-4 rounded-lg">
               <input
                 type="file"
                 accept="audio/*"
@@ -151,11 +220,9 @@ export default function Home() {
         </div>
       </div>
 
-      {/* bottom bar */}
       {playlist.length > 0 && (
-        <footer className="sticky bottom-0 left-0 w-full bg-teal-800 text-white border-t border-teal-700 shadow-inner z-10">
+        <footer className="sticky bottom-0 w-full bg-teal-800 text-white border-t border-teal-700 shadow-inner z-10">
           <div className="max-w-xl mx-auto p-4 flex flex-col gap-3">
-            {/* Track info */}
             <div className="flex items-center gap-4">
               {playlist[current].cover_data_url ? (
                 <img
@@ -178,35 +245,18 @@ export default function Home() {
               </div>
             </div>
 
-            {/* controls */}
             <div className="flex items-center justify-between">
               <div className="flex gap-3">
-                <Button
-                  onClick={prev}
-                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
-                  size="icon"
-                >
+                <Button onClick={prev} size="icon" className="bg-transparent">
                   <SkipBack className="w-5 h-5" />
                 </Button>
-                <Button
-                  onClick={play}
-                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
-                  size="icon"
-                >
+                <Button onClick={play} size="icon" className="bg-transparent">
                   <Play className="w-5 h-5 text-white" />
                 </Button>
-                <Button
-                  onClick={pause}
-                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
-                  size="icon"
-                >
+                <Button onClick={pause} size="icon" className="bg-transparent">
                   <Pause className="w-5 h-5 text-white" />
                 </Button>
-                <Button
-                  onClick={next}
-                  className="bg-transparent backdrop-blur-2xl backdrop-brightness-60"
-                  size="icon"
-                >
+                <Button onClick={next} size="icon" className="bg-transparent">
                   <SkipForward className="w-5 h-5 text-white" />
                 </Button>
               </div>
@@ -215,7 +265,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Seek bar */}
             <input
               type="range"
               min={0}
@@ -226,21 +275,13 @@ export default function Home() {
               className="w-full h-2 bg-teal-600 rounded-lg appearance-none cursor-pointer"
             />
           </div>
-
-          {/* Hidden audio element */}
-          <audio ref={audioRef} onEnded={next} className="hidden" />
+          <audio
+            ref={audioRef}
+            onEnded={next}
+            className="hidden"
+          />
         </footer>
       )}
     </main>
   );
-}
-
-function formatTime(sec: number): string {
-  const m = Math.floor(sec / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = Math.floor(sec % 60)
-    .toString()
-    .padStart(2, "0");
-  return `${m}:${s}`;
 }
