@@ -6,7 +6,7 @@ on:
     branches:
       - release
 
-jobs:
+  jobs:
   publish-tauri:
     permissions:
       contents: write
@@ -16,11 +16,13 @@ jobs:
         include:
           - platform: 'macos-latest'
             args: '--target aarch64-apple-darwin'
+            target: 'aarch64-apple-darwin'
           - platform: 'ubuntu-22.04'
             args: ''
+            target: ''
           - platform: 'windows-latest'
             args: ''
-
+            target: ''
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +43,7 @@ jobs:
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' || ''}}
+          targets: ${{ matrix.target }}
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
@@ -62,4 +64,5 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
 
