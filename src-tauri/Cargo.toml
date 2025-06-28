@@ -1,5 +1,5 @@
 [package]
-name = "Music Player"
+name = "Music-Player"
 version = "0.1.0"
 description = "A Tauri App"
 authors = ["Arjav Jain <arjavjain0703@gmail.com>"]
