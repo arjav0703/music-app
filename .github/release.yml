@@ -1,9 +1,9 @@
-name: 'publish'
+name: 'release'
 
 on:
   workflow_dispatch:
   push:
-name: 'publish'
+name: 'release'
 
 on:
   workflow_dispatch:
