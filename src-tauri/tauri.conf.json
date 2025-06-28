@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "todo",
+  "productName": "Music-Player",
   "version": "0.1.0",
-  "identifier": "com.todo.app",
+  "identifier": "com.music-plater.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "todo",
+        "title": "Music-Player",
         "width": 800,
         "height": 600
       }
