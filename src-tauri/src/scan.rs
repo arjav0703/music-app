@@ -18,6 +18,7 @@ pub struct TrackMetadata {
 
 #[command]
 pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
+    //println!("[{}] Starting folder scan......", path);
     const EXTENSIONS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
 
     WalkDir::new(&path)

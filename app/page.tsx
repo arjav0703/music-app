@@ -5,14 +5,24 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { readFile } from "@tauri-apps/plugin-fs";
 import { load, Store } from "@tauri-apps/plugin-store";
-import { Button } from "@/components/ui/button";
 import {
-  SkipBack,
-  SkipForward,
-  Pause,
   Play,
+  Pause,
+  SkipForward,
+  SkipBack,
   FolderOpen,
 } from "lucide-react";
+
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import TrackGrid from "@/components/TrackGrid";
+import PlayerBar from "@/components/PlayerBar";
 
 type Track = {
   name: string;
@@ -34,12 +44,8 @@ type ScannedTrack = {
 };
 
 function formatTime(sec: number): string {
-  const m = Math.floor(sec / 60)
-    .toString()
-    .padStart(2, "0");
-  const s = Math.floor(sec % 60)
-    .toString()
-    .padStart(2, "0");
+  const m = Math.floor(sec / 60).toString().padStart(2, "0");
+  const s = Math.floor(sec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
 
@@ -60,10 +66,11 @@ async function filePathToBlobUrl(path: string): Promise<string> {
 
 export default function Home() {
   const [store, setStore] = useState<Store | null>(null);
-
   const audioRef = useRef<HTMLAudioElement>(null);
+
   const [playlist, setPlaylist] = useState<Track[]>([]);
   const [current, setCurrent] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
@@ -75,15 +82,12 @@ export default function Home() {
     if (!store) return;
     (async () => {
       const savedList = (await store.get<Track[]>("playlist")) ?? [];
-      const savedIdx  = (await store.get<number>("current")) ?? 0;
+      const savedIdx = (await store.get<number>("current")) ?? 0;
 
       if (savedList.length) {
-        // Mark the callback `async` and use Promise.all
         const rebuilt = await Promise.all(
           savedList.map(async (t) =>
-            t.path
-              ? { ...t, url: await filePathToBlobUrl(t.path) }
-              : t
+            t.path ? { ...t, url: await filePathToBlobUrl(t.path) } : t
           )
         );
 
@@ -93,7 +97,6 @@ export default function Home() {
     })();
   }, [store]);
 
-
   const persist = async (plist: Track[], idx: number) => {
     if (!store) return;
     await store.set("playlist", plist);
@@ -101,7 +104,6 @@ export default function Home() {
     await store.save();
   };
 
-  // --- action handlers ---
   const pickAndScanFolder = async () => {
     if (!store) return;
     const selected = await open({ directory: true });
@@ -128,34 +130,33 @@ export default function Home() {
     persist(tracks, 0);
   };
 
-  const addFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    const newTracks = Array.from(files).map((file) => ({
-      name: file.name,
-      url: URL.createObjectURL(file),
-    }));
-    const updated = [...playlist, ...newTracks];
-    setPlaylist(updated);
-    persist(updated, current);
+  const playTrack = (index: number) => {
+    setCurrent(index);
+    setIsPlaying(true);
+    persist(playlist, index);
   };
 
-  const play = () => audioRef.current?.play();
-  const pause = () => audioRef.current?.pause();
+  const play = () => {
+    audioRef.current?.play();
+    setIsPlaying(true);
+  };
+
+  const pause = () => {
+    audioRef.current?.pause();
+    setIsPlaying(false);
+  };
 
   const next = () => {
-    const nextIdx = playlist.length
-      ? (current + 1) % playlist.length
-      : 0;
+    const nextIdx = (current + 1) % playlist.length;
     setCurrent(nextIdx);
+    setIsPlaying(true);
     persist(playlist, nextIdx);
   };
 
   const prev = () => {
-    const prevIdx = playlist.length
-      ? (current - 1 + playlist.length) % playlist.length
-      : 0;
+    const prevIdx = (current - 1 + playlist.length) % playlist.length;
     setCurrent(prevIdx);
+    setIsPlaying(true);
     persist(playlist, prevIdx);
   };
 
@@ -165,14 +166,12 @@ export default function Home() {
     setCurrentTime(val);
   };
 
-  // sync audio element on playlist/current change
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !playlist.length) return;
-    audio.pause();
     audio.src = playlist[current].url;
     audio.load();
-    audio.play().catch(() => {});
+    if (isPlaying) audio.play().catch(() => {});
     const onTime = () => setCurrentTime(audio.currentTime);
     const onMeta = () => setDuration(audio.duration || 0);
     audio.addEventListener("timeupdate", onTime);
@@ -181,107 +180,76 @@ export default function Home() {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("loadedmetadata", onMeta);
     };
-  }, [current, playlist]);
+  }, [current, playlist, isPlaying]);
 
   return (
-    <main className="min-h-screen flex flex-col bg-beige-100 text-teal-900 font-sans">
-      <div className="flex-1 p-8 overflow-y-auto">
-        <div className="max-w-xl mx-auto bg-yellow-50 rounded-2xl shadow-xl p-6 space-y-6 border border-yellow-200">
-          <h1 className="text-2xl font-bold text-center text-teal-800">
-            🎵 Cozy Tauri Music Player
-          </h1>
+    <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
+      <header className="p-4 border-b border-neutral-800 flex justify-between">
+        <h1 className="text-2xl font-bold">🎶 TauriTunes</h1>
+        <Button onClick={pickAndScanFolder}>
+          <FolderOpen className="w-4 h-4 mr-2" />
+          Scan Folder
+        </Button>
+      </header>
 
-          <div className="flex justify-between gap-2">
-            <Button
-              onClick={pickAndScanFolder}
-              className="flex-1 bg-teal-600 hover:bg-teal-700 text-white"
-            >
-              <FolderOpen className="mr-2 w-4 h-4" />
-              Scan Folder
-            </Button>
-
-            <label className="flex-1 cursor-pointer bg-yellow-300 hover:bg-yellow-400 text-teal-900 font-medium text-center py-2 px-4 rounded-lg">
-              <input
-                type="file"
-                accept="audio/*"
-                multiple
-                onChange={addFiles}
-                className="hidden"
-              />
-              Add Files
-            </label>
-          </div>
-
-          {playlist.length > 0 && (
-            <div className="bg-yellow-100 rounded-xl p-3 text-center text-lg font-semibold">
-              Loaded {playlist.length} tracks
-            </div>
-          )}
-        </div>
-      </div>
+      <ScrollArea className="flex-1 p-6">
+        <TrackGrid tracks={playlist} onSelect={playTrack} />
+      </ScrollArea>
 
       {playlist.length > 0 && (
-        <footer className="sticky bottom-0 w-full bg-teal-800 text-white border-t border-teal-700 shadow-inner z-10">
-          <div className="max-w-xl mx-auto p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-4">
+        <footer className="bg-neutral-900 border-t border-neutral-800 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
               {playlist[current].cover_data_url ? (
                 <img
                   src={playlist[current].cover_data_url}
-                  alt="Cover"
-                  className="w-12 h-12 rounded-md object-cover border border-teal-500"
+                  className="w-12 h-12 rounded-md object-cover"
                 />
               ) : (
-                <div className="w-12 h-12 bg-teal-600 rounded-md flex items-center justify-center text-xs">
+                <div className="w-12 h-12 bg-neutral-700 rounded-md flex items-center justify-center text-xs">
                   No Art
                 </div>
               )}
               <div className="truncate">
-                <div className="font-semibold text-sm truncate">
+                <div className="text-sm font-medium truncate">
                   {playlist[current].title ?? playlist[current].name}
                 </div>
-                <div className="text-xs text-teal-200 truncate">
+                <div className="text-xs text-neutral-400 truncate">
                   {playlist[current].artist ?? "Unknown Artist"}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex gap-3">
-                <Button onClick={prev} size="icon" className="bg-transparent">
-                  <SkipBack className="w-5 h-5" />
-                </Button>
-                <Button onClick={play} size="icon" className="bg-transparent">
-                  <Play className="w-5 h-5 text-white" />
-                </Button>
-                <Button onClick={pause} size="icon" className="bg-transparent">
-                  <Pause className="w-5 h-5 text-white" />
-                </Button>
-                <Button onClick={next} size="icon" className="bg-transparent">
-                  <SkipForward className="w-5 h-5 text-white" />
-                </Button>
-              </div>
-              <div className="text-xs font-mono">
+            <div className="flex items-center gap-4">
+              <Button size="icon" variant="ghost" onClick={prev}>
+                <SkipBack />
+              </Button>
+              <Button size="icon" variant="ghost" onClick={isPlaying ? pause : play}>
+                {isPlaying ? <Pause /> : <Play />}
+              </Button>
+              <Button size="icon" variant="ghost" onClick={next}>
+                <SkipForward />
+              </Button>
+            </div>
+
+            <div className="flex-1 px-4">
+              <input
+                type="range"
+                min={0}
+                max={duration || 0}
+                step={0.1}
+                value={currentTime}
+                onChange={handleSeek}
+                className="w-full"
+              />
+              <div className="text-xs text-right font-mono">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
-
-            <input
-              type="range"
-              min={0}
-              max={duration || 0}
-              step={0.1}
-              value={currentTime}
-              onChange={handleSeek}
-              className="w-full h-2 bg-teal-600 rounded-lg appearance-none cursor-pointer"
-            />
           </div>
-          <audio
-            ref={audioRef}
-            onEnded={next}
-            className="hidden"
-          />
+          <audio ref={audioRef} onEnded={next} className="hidden" />
         </footer>
       )}
-    </main>
+    </div>
   );
 }

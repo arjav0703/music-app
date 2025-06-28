@@ -3,7 +3,7 @@
 version = 4
 
 [[package]]
-name = "music-player"
+name = "Music-Player"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",

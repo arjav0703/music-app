@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# adding pnpm-lock.yaml because GH action attempts to use pnpm 
+pnpm-lock.yaml
