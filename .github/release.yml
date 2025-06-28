@@ -3,6 +3,11 @@ name: 'publish'
 on:
   workflow_dispatch:
   push:
+name: 'publish'
+
+on:
+  workflow_dispatch:
+  push:
     branches:
       - release
 
@@ -31,13 +36,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: setup node & pnpm
+      - name: setup node & cache npm
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          package-manager: pnpm
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -50,7 +54,8 @@ jobs:
           workspaces: './src-tauri -> target'
 
       - name: install frontend dependencies
-        run: pnpm install
+        run: npm ci
+        working-directory: ./
 
       - uses: tauri-apps/tauri-action@v0
         env:
