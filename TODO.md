@@ -9,3 +9,5 @@
 
 3. Keyboard shortcuts
     Implemet keeb shorcuts like CTRL + O and FN shortcuts for music control. (tauri docs - https://v2.tauri.app/plugin/global-shortcut/)
+
+4. Add file based logging.
