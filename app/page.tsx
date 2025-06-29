@@ -22,13 +22,14 @@ import { useCallback } from "react";
 
 type Track = {
   name: string;
-  url: string;
-  path?: string;
+  path: string;
+  url?: string;
   title?: string;
   artist?: string;
   album?: string;
   cover_data_url?: string;
 };
+
 
 type ScannedTrack = {
   name: string;
@@ -46,7 +47,12 @@ function formatTime(sec: number): string {
 }
 
 async function filePathToBlobUrl(path: string): Promise<string> {
-  const bytes = await readFile(path);
+  const bytes = await invoke<unknown>("load_file_bytes", { path });
+
+  if (!Array.isArray(bytes)) {
+    throw new Error("Invalid bytes received from backend: " + String(bytes));
+  }
+
   const ext = path.split(".").pop()?.toLowerCase() ?? "";
   const mime =
     {
@@ -56,9 +62,12 @@ async function filePathToBlobUrl(path: string): Promise<string> {
       flac: "audio/flac",
       m4a: "audio/mp4",
     }[ext] || "application/octet-stream";
-  const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+
+  const uint8array = new Uint8Array(bytes);
+  const blob = new Blob([uint8array], { type: mime });
   return URL.createObjectURL(blob);
 }
+
 
 export default function Home() {
   const [store, setStore] = useState<Store | null>(null);
@@ -74,24 +83,24 @@ export default function Home() {
     load("store.json", { autoSave: false }).then(setStore);
   }, []);
 
-  useEffect(() => {
-    if (!store) return;
-    (async () => {
-      const savedList = (await store.get<Track[]>("playlist")) ?? [];
-      const savedIdx = (await store.get<number>("current")) ?? 0;
+  // useEffect(() => {
+  //   if (!store) return;
+  //   (async () => {
+  //     const savedList = (await store.get<Track[]>("playlist")) ?? [];
+  //     const savedIdx = (await store.get<number>("current")) ?? 0;
 
-      if (savedList.length) {
-        const rebuilt = await Promise.all(
-          savedList.map(async (t) =>
-            t.path ? { ...t, url: await filePathToBlobUrl(t.path) } : t
-          )
-        );
+  //     if (savedList.length) {
+  //       const rebuilt = await Promise.all(
+  //         savedList.map(async (t) =>
+  //           t.path ? { ...t, url: await filePathToBlobUrl(t.path) } : t
+  //         )
+  //       );
 
-        setPlaylist(rebuilt);
-        setCurrent(savedIdx);
-      }
-    })();
-  }, [store]);
+  //       setPlaylist(rebuilt);
+  //       setCurrent(savedIdx);
+  //     }
+  //   })();
+  // }, [store]);
 
   const persist = useCallback(
       async (plist: Track[], idx: number) => {
@@ -112,28 +121,34 @@ export default function Home() {
       path: selected,
     });
 
-    const tracks: Track[] = await Promise.all(
-      scanned.map(async (f) => ({
-        name: f.name,
-        path: f.path,
-        url: await filePathToBlobUrl(f.path),
-        title: f.title,
-        artist: f.artist,
-        album: f.album,
-        cover_data_url: f.cover_data_url,
-      }))
-    );
+    const tracks: Track[] = scanned.map((f) => ({
+      name: f.name,
+      path: f.path,
+      title: f.title,
+      artist: f.artist,
+      album: f.album,
+      cover_data_url: f.cover_data_url,
+    }));
 
-    setPlaylist(tracks);
-    setCurrent(0);
-    persist(tracks, 0);
-  };
 
-  const playTrack = (index: number) => {
-    setCurrent(index);
-    setIsPlaying(true);
-    persist(playlist, index);
-  };
+      setPlaylist(tracks);
+      setCurrent(0);
+      persist(tracks, 0);
+    };
+
+    const playTrack = async (index: number) => {
+      const track = playlist[index];
+      if (!track.url) {
+        const blobUrl = await filePathToBlobUrl(track.path!);
+        const updated = [...playlist];
+        updated[index] = { ...track, url: blobUrl };
+        setPlaylist(updated);
+      }
+      setCurrent(index);
+      setIsPlaying(true);
+      persist(playlist, index);
+    };
+
 
   const play = () => {
     audioRef.current?.play();
@@ -167,19 +182,45 @@ export default function Home() {
 
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || !playlist.length) return;
-    audio.src = playlist[current].url;
-    audio.load();
-    if (isPlaying) audio.play().catch(() => {});
+    const currentTrack = playlist[current];
+    if (!audio || !currentTrack) return;
+
+    const setupAudio = async () => {
+      let url = currentTrack.url;
+
+      // generate blob url
+      if (!url && currentTrack.path) {
+        url = await filePathToBlobUrl(currentTrack.path);
+        const updated = [...playlist];
+        updated[current] = { ...currentTrack, url };
+        setPlaylist(updated);
+      }
+
+      audio.src = url!;
+      audio.load();
+
+      if (isPlaying) {
+        try {
+          await audio.play();
+        } catch (err) {
+          console.error("Failed to auto-play:", err);
+        }
+      }
+    };
+
+    setupAudio();
+
     const onTime = () => setCurrentTime(audio.currentTime);
     const onMeta = () => setDuration(audio.duration || 0);
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", onMeta);
+
     return () => {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("loadedmetadata", onMeta);
     };
   }, [current, playlist, isPlaying]);
+
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
