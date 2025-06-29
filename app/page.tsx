@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TrackGrid from "@/components/TrackGrid";
 import PlayerBar from "@/components/PlayerBar";
+import { useCallback } from "react";
+
 
 type Track = {
   name: string;
@@ -91,12 +93,15 @@ export default function Home() {
     })();
   }, [store]);
 
-  const persist = async (plist: Track[], idx: number) => {
-    if (!store) return;
-    await store.set("playlist", plist);
-    await store.set("current", idx);
-    await store.save();
-  };
+  const persist = useCallback(
+      async (plist: Track[], idx: number) => {
+        if (!store) return;
+        await store.set("playlist", plist);
+        await store.set("current", idx);
+        await store.save();
+      },
+      [store]
+    );
 
   const pickAndScanFolder = async () => {
     if (!store) return;
