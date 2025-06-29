@@ -1,3 +1,4 @@
+// TODO: fix positioning and add transparency + hover effects
 import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -36,7 +37,7 @@ export default function PlayerBar({
   onSeek,
 }: Props) {
   return (
-    <footer className="bg-neutral-900 border-t border-neutral-800 p-4">
+    <footer className="bg-neutral-900 border-t border-neutral-800 p-4 fixed">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           {track.cover_data_url ? (

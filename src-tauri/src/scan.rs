@@ -3,6 +3,7 @@ use lofty::probe::Probe;
 use lofty::tag::Accessor;
 use rayon::prelude::*;
 use serde::Serialize;
+use std::time::Instant;
 use tauri::command;
 use walkdir::WalkDir;
 
@@ -18,10 +19,12 @@ pub struct TrackMetadata {
 
 #[command]
 pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
-    //println!("[{}] Starting folder scan......", path);
     const EXTENSIONS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
 
-    WalkDir::new(&path)
+    println!("[{}] Starting folder scan......", path);
+    let start = Instant::now();
+
+    let tracks: Vec<TrackMetadata> = WalkDir::new(&path)
         .max_depth(2)
         .into_iter()
         .filter_map(Result::ok)
@@ -79,5 +82,15 @@ pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
                 cover_data_url,
             })
         })
-        .collect()
+        .collect();
+
+    let duration = start.elapsed();
+    println!(
+        "[{}] Scan complete: found {} tracks in {:.2?}",
+        path,
+        tracks.len(),
+        duration
+    );
+
+    tracks
 }

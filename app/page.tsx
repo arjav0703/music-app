@@ -1,5 +1,5 @@
 "use client";
-
+//    
 import { useState, useRef, useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
@@ -13,12 +13,6 @@ import {
   FolderOpen,
 } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TrackGrid from "@/components/TrackGrid";
@@ -192,12 +186,12 @@ export default function Home() {
         </Button>
       </header>
 
-      <ScrollArea className="flex-1 p-6">
+      <ScrollArea className="flex-1 p-6 pb-24">
         <TrackGrid tracks={playlist} onSelect={playTrack} />
       </ScrollArea>
 
       {playlist.length > 0 && (
-        <footer className="bg-neutral-900 border-t border-neutral-800 p-4">
+        <footer className="bg-neutral-900 border-t border-neutral-800 p-4 fixed bottom-0 left-0 right-0 z-50">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               {playlist[current].cover_data_url ? (
