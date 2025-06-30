@@ -1,23 +1,18 @@
-// TODO: fix positioning and add transparency + hover effects
-import { Play, Pause, SkipForward, SkipBack } from "lucide-react";
+import React, { RefObject } from "react";
+import { SkipBack, SkipForward, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface Props {
+type Props = {
+  track: { cover_data_url?: string; title?: string; name: string; artist?: string; };
   isPlaying: boolean;
+  onPrev(): void;
+  onTogglePlay(): void;
+  onNext(): void;
   currentTime: number;
   duration: number;
-  track: {
-    title?: string;
-    name: string;
-    artist?: string;
-    cover_data_url?: string;
-  };
-  onPlay: () => void;
-  onPause: () => void;
-  onNext: () => void;
-  onPrev: () => void;
-  onSeek: (val: number) => void;
-}
+  onSeek(time: number): void;
+  audioRef: RefObject<HTMLAudioElement | null>;
+};
 
 function formatTime(sec: number): string {
   const m = Math.floor(sec / 60).toString().padStart(2, "0");
@@ -26,18 +21,11 @@ function formatTime(sec: number): string {
 }
 
 export default function PlayerBar({
-  isPlaying,
-  currentTime,
-  duration,
-  track,
-  onPlay,
-  onPause,
-  onNext,
-  onPrev,
-  onSeek,
+  track, isPlaying, onPrev, onTogglePlay, onNext,
+  currentTime, duration, onSeek, audioRef
 }: Props) {
   return (
-    <footer className="bg-neutral-900 border-t border-neutral-800 p-4 fixed">
+    <footer className="bg-neutral-900 border-t border-neutral-800 p-4 fixed bottom-0 left-0 right-0 z-50">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           {track.cover_data_url ? (
@@ -64,13 +52,11 @@ export default function PlayerBar({
           <Button size="icon" variant="ghost" onClick={onPrev}>
             <SkipBack />
           </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            onClick={isPlaying ? onPause : onPlay}
-          >
+
+          <Button size="icon" variant="ghost" onClick={onTogglePlay}>
             {isPlaying ? <Pause /> : <Play />}
           </Button>
+
           <Button size="icon" variant="ghost" onClick={onNext}>
             <SkipForward />
           </Button>
@@ -80,7 +66,7 @@ export default function PlayerBar({
           <input
             type="range"
             min={0}
-            max={duration || 0}
+            max={duration}
             step={0.1}
             value={currentTime}
             onChange={(e) => onSeek(parseFloat(e.currentTarget.value))}
@@ -91,6 +77,7 @@ export default function PlayerBar({
           </div>
         </div>
       </div>
+      <audio ref={audioRef} onEnded={onNext} className="hidden" />
     </footer>
   );
 }
