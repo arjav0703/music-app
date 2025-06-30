@@ -6,6 +6,7 @@ use serde::Serialize;
 use std::time::Instant;
 use tauri::command;
 use walkdir::WalkDir;
+use log;
 
 #[derive(Serialize)]
 pub struct TrackMetadata {
@@ -21,7 +22,7 @@ pub struct TrackMetadata {
 pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
     const EXTENSIONS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
 
-    println!("[{}] Starting folder scan......", path);
+    log::info!("[{}] Starting folder scan......", path);
     let start = Instant::now();
 
     let tracks: Vec<TrackMetadata> = WalkDir::new(&path)
@@ -85,7 +86,7 @@ pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
         .collect();
 
     let duration = start.elapsed();
-    println!(
+    log::info!(
         "[{}] Scan complete: found {} tracks in {:.2?}",
         path,
         tracks.len(),

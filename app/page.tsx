@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
-import { readFile } from "@tauri-apps/plugin-fs";
 import { load, Store } from "@tauri-apps/plugin-store";
 import {
   Play,
@@ -18,6 +17,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import TrackGrid from "@/components/TrackGrid";
 import PlayerBar from "@/components/PlayerBar";
 import { useCallback } from "react";
+import {
+  warn,
+  debug,
+  trace,
+  info,
+  error,
+  attachConsole,
+  attachLogger,
+} from '@tauri-apps/plugin-log';
 
 
 type Track = {
@@ -80,7 +88,14 @@ export default function Home() {
   const [duration, setDuration] = useState(0);
 
   useEffect(() => {
-    load("store.json", { autoSave: false }).then(setStore);
+    load("store.json", { autoSave: false })
+      .then((s) => {
+        setStore(s);
+        info("Loaded store.json");
+      })
+      .catch((e) => {
+        error("Failed to load store.json:", e);
+      });
   }, []);
 
   // useEffect(() => {
@@ -204,6 +219,7 @@ export default function Home() {
           await audio.play();
         } catch (err) {
           console.error("Failed to auto-play:", err);
+          warn("failed to auto-play")
         }
       }
     };
@@ -220,7 +236,6 @@ export default function Home() {
       audio.removeEventListener("loadedmetadata", onMeta);
     };
   }, [current, playlist, isPlaying]);
-
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
