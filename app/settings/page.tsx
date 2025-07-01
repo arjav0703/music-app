@@ -3,19 +3,22 @@
 import { useEffect, useState } from "react"
 import { FolderOpen, Settings } from "lucide-react"
 import { Store, load } from "@tauri-apps/plugin-store"
+import { Button } from "@/components/ui/button"
+import { useAudioPlayer } from "@/hooks/useAudioPlayer"
 
 export default function SettingsPage() {
-  const [defaultDir, setDefaultDir] = useState<string>("")
+    const {pickAndScanFolder} = useAudioPlayer();
+    const [defaultDir, setDefaultDir] = useState<string>("")
 
-  useEffect(() => {
-    ;(async () => {
-      const store: Store = await load("settings.json")
-      const dir = await store.get("default_dir")
-      if (typeof dir === "string") {  
-        setDefaultDir(dir)
-      }
-    })()
-  }, [])
+    useEffect(() => {
+        ;(async () => {
+        const store: Store = await load("settings.json")
+        const dir = await store.get("default_dir")
+        if (typeof dir === "string") {  
+            setDefaultDir(dir)
+        }
+        })()
+    }, [])
 
   return (
     <div className="bg-black min-h-screen text-white">
@@ -24,11 +27,17 @@ export default function SettingsPage() {
           <Settings size={60} /> Settings
         </h1>
         <div className="mt-10">
-          <h2 className="text-2xl flex align-text-bottom">
-            <FolderOpen className="mx-1"/> Default folder:
-            <p className="mx-1">
-                {defaultDir || "Not set yet"}
-            </p>
+          <h2 className="text-2xl flex align-text-bottom justify-between">
+            <div className="flex">
+                <FolderOpen className="mx-1"/> Default folder:
+                <p className="mx-1 hover:underline">
+                    {defaultDir || "Not set yet"}
+                </p>                
+            </div>
+
+            <Button onClick={pickAndScanFolder}>
+                <FolderOpen className="w-4 h-4 mr-2" /> Scan Folder
+            </Button>
           </h2>
 
         </div>
