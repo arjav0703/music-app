@@ -16,7 +16,40 @@ export function useAudioPlayer() {
   const [duration, setDuration] = useState(0);
 
   const { persist } = usePlaylistStore();
-  
+
+  const LoadDefaultDir = useCallback(async() => {
+    const store: Store = await load("settings.json");
+    const dir = await store.get("default_dir");
+    if (typeof dir === "string") {  
+      await scanAndSetPlaylist(dir, 0);
+    }
+  }, [persist])
+
+  // Do not touch, auto load on start
+  useEffect(() => {
+    LoadDefaultDir();
+  }, [LoadDefaultDir]);
+
+
+  const scanAndSetPlaylist = useCallback(
+    async (path: string, startIndex: number) => {
+      const scanned = await invoke<ScannedTrack[]>("scan_folder", { path });
+      const tracks: Track[] = scanned.map((f) => ({
+        name: f.name,
+        path: f.path,
+        title: f.title,
+        artist: f.artist,
+        album: f.album,
+        cover_data_url: f.cover_data_url,
+      }));
+
+      setPlaylist(tracks);
+      setCurrent(startIndex);
+      persist(tracks, startIndex);
+    },
+    [persist]
+  );
+
   const pickAndScanFolder = useCallback(async () => {
     try {
       const selected = await open({ directory: true });
@@ -28,23 +61,7 @@ export function useAudioPlayer() {
       store.set("default_dir", selected);
       await store.save();
 
-      // scan folder on backend
-      const scanned = await invoke<ScannedTrack[]>("scan_folder", {
-        path: selected,
-      });
-
-      const tracks: Track[] = scanned.map((f) => ({
-        name: f.name,
-        path: f.path,
-        title: f.title,
-        artist: f.artist,
-        album: f.album,
-        cover_data_url: f.cover_data_url,
-      }));
-
-      setPlaylist(tracks);
-      setCurrent(0);
-      persist(tracks, 0);
+      await scanAndSetPlaylist(selected, 0);
     } catch (e) {
     }
   }, [persist]);
@@ -140,6 +157,7 @@ export function useAudioPlayer() {
     duration,
     audioRef,
     pickAndScanFolder,
+    LoadDefaultDir,
     playTrack,
     play,
     pause,

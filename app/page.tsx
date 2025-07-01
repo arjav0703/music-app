@@ -25,6 +25,7 @@ export default function Home() {
     duration,
     audioRef,
     pickAndScanFolder,
+    LoadDefaultDir,
     playTrack,
     play,
     pause,
