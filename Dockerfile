@@ -19,7 +19,6 @@ RUN apt-get update \
       build-essential \
       libwebkit2gtk-4.0-dev \
       pkg-config \
- && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -46,7 +45,5 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY --from=tauri-build /app/src-tauri/target/release/music-player ./
-
-ENTRYPOINT ["./music-player"]
+COPY --from=tauri-build /app/src-tauri/target/release/ ./
 

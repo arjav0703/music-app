@@ -4,39 +4,49 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { filePathToBlobUrl } from "@/utils/filetoBlob";
 import { usePlaylistStore } from "./usePlaylistStore";
-import { warn } from "@tauri-apps/plugin-log";
+import { error, info, warn } from "@tauri-apps/plugin-log";
+import { Store, load } from "@tauri-apps/plugin-store";
 
 export function useAudioPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playlist, setPlaylist] = useState<Track[]>([]);
-  const [current, setCurrent]   = useState(0);
+  const [current, setCurrent] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
   const { persist } = usePlaylistStore();
-
-  // scan folder & build Track[]
+  
   const pickAndScanFolder = useCallback(async () => {
-    const selected = await open({ directory: true });
-    if (typeof selected !== "string") return;
+    try {
+      const selected = await open({ directory: true });
+      if (typeof selected !== "string") {
+        return;
+      }
 
-    const scanned = await invoke<ScannedTrack[]>("scan_folder", {
-      path: selected,
-    });
+      const store: Store = await load("settings.json");
+      store.set("default_dir", selected);
+      await store.save();
 
-    const tracks: Track[] = scanned.map((f) => ({
-      name: f.name,
-      path: f.path,
-      title: f.title,
-      artist: f.artist,
-      album: f.album,
-      cover_data_url: f.cover_data_url,
-    }));
+      // scan folder on backend
+      const scanned = await invoke<ScannedTrack[]>("scan_folder", {
+        path: selected,
+      });
 
-    setPlaylist(tracks);
-    setCurrent(0);
-    persist(tracks, 0);
+      const tracks: Track[] = scanned.map((f) => ({
+        name: f.name,
+        path: f.path,
+        title: f.title,
+        artist: f.artist,
+        album: f.album,
+        cover_data_url: f.cover_data_url,
+      }));
+
+      setPlaylist(tracks);
+      setCurrent(0);
+      persist(tracks, 0);
+    } catch (e) {
+    }
   }, [persist]);
 
   // play a specific track (loads URL if needed)
@@ -57,16 +67,22 @@ export function useAudioPlayer() {
   );
 
   // controls
-  const play  = () => { audioRef.current?.play();  setIsPlaying(true);  };
-  const pause = () => { audioRef.current?.pause(); setIsPlaying(false); };
-  const next  = () => {
+  const play = () => {
+    audioRef.current?.play();
+    setIsPlaying(true);
+  };
+  const pause = () => {
+    audioRef.current?.pause();
+    setIsPlaying(false);
+  };
+  const next = () => {
     if (playlist.length === 0) return;
     const idx = (current + 1) % playlist.length;
     setCurrent(idx);
     setIsPlaying(true);
     persist(playlist, idx);
   };
-  const prev  = () => {
+  const prev = () => {
     if (playlist.length === 0) return;
     const idx = (current - 1 + playlist.length) % playlist.length;
     setCurrent(idx);
@@ -102,7 +118,6 @@ export function useAudioPlayer() {
         }
       }
     };
-
     setup();
 
     const onTime = () => setCurrentTime(audio.currentTime);
@@ -133,3 +148,4 @@ export function useAudioPlayer() {
     seek,
   };
 }
+

@@ -6,6 +6,8 @@ import {
   SkipForward,
   Play,
   Pause,
+  Settings,
+  Link,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -38,6 +40,11 @@ export default function Home() {
         <Button onClick={pickAndScanFolder}>
           <FolderOpen className="w-4 h-4 mr-2" /> Scan Folder
         </Button>
+        <a href="/settings">
+          <Button>
+            <Settings className="w-4 h-4 mr-2" /> Settings
+          </Button>
+        </a>
       </header>
 
       <ScrollArea className="flex-1 p-6 pb-24">
