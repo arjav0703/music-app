@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tauri App",
-  description: "This is a desktop app built with Tauri (backend) and NextJS (frontend)",
+  title: "Musik",
+  description: "A music player",
+  icons: '/icon.png'
 };
 
 export default function RootLayout({

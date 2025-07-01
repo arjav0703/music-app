@@ -120,3 +120,17 @@
         @apply bg-background text-foreground;
     }
 }
+
+@font-face {
+  font-family: "Just Another Hand";
+  src:
+       url("../public/JustAnotherHand-Regular.ttf")  
+       format("truetype");
+  font-weight: normal;
+  font-style:  normal;
+}
+
+.font-hand {
+    font-family: 'Just Another Hand';
+    letter-spacing: 2px;
+}

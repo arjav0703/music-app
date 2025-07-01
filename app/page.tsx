@@ -37,15 +37,17 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
       <header className="p-4 border-b border-neutral-800 flex justify-between">
-        <h1 className="text-2xl font-bold">🎶 TauriTunes</h1>
-        <Button onClick={pickAndScanFolder}>
-          <FolderOpen className="w-4 h-4 mr-2" /> Scan Folder
-        </Button>
-        <a href="/settings">
-          <Button>
-            <Settings className="w-4 h-4 mr-2" /> Settings
+        <h1 className="text-6xl font-hand mx-4"> Musik </h1>
+        <div className="flex gap-4">
+          <Button onClick={pickAndScanFolder}>
+            <FolderOpen className="w-4 h-4 mr-2" /> Scan Folder
           </Button>
-        </a>
+          <a href="/settings">
+            <Button>
+              <Settings className="w-4 h-4 mr-2" /> Settings
+            </Button>
+          </a>
+        </div>
       </header>
 
       <ScrollArea className="flex-1 p-6 pb-24">

@@ -46,11 +46,11 @@ function Button({
     asChild?: boolean
   }) {
   const Comp = asChild ? Slot : "button"
-
+  const className2: String | null = className + " hover:scale-105 active:scale-90"
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, className: className2 }))}
       {...props}
     />
   )
