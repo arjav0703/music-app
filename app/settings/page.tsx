@@ -5,6 +5,7 @@ import { FolderOpen, Settings } from "lucide-react"
 import { Store, load } from "@tauri-apps/plugin-store"
 import { Button } from "@/components/ui/button"
 import { useAudioPlayer } from "@/hooks/useAudioPlayer"
+import TextScramble from "@/components/Scrambletext"
 
 export default function SettingsPage() {
     const {pickAndScanFolder} = useAudioPlayer();
@@ -24,7 +25,7 @@ export default function SettingsPage() {
     <div className="bg-black min-h-screen text-white">
       <main className="max-w-5xl mx-auto py-10">
         <h1 className="text-6xl flex font-bold">
-          <Settings size={60} /> Settings
+          <Settings size={60} /><TextScramble text="Settings" color="#fff"/>
         </h1>
         <div className="mt-10">
           <h2 className="text-2xl flex align-text-bottom justify-between">
