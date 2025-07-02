@@ -1,4 +1,5 @@
 import TrackCard from "./TrackCard";
+import { InView } from "react-intersection-observer";
 
 type Track = {
   name: string;
@@ -16,13 +17,29 @@ export default function TrackGrid({ tracks, onSelect }: Props) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-6">
       {tracks.map((track, index) => (
-        <TrackCard
+        <InView
           key={index}
-          title={track.title ?? track.name}
-          artist={track.artist ?? "Unknown Artist"}
-          cover={track.cover_data_url}
-          onClick={() => onSelect(index)}
-        />
+          triggerOnce
+          rootMargin="300px"
+        >
+          {({ inView, ref }) => (
+            <div ref={ref}>
+              {inView ? (
+                <TrackCard
+                  title={track.title ?? track.name}
+                  artist={track.artist ?? "Unknown Artist"}
+                  cover={track.cover_data_url}
+                  onClick={() => onSelect(index)}
+                />
+              ) : (
+                <div
+                  className="w-full bg-gray-100 animate-pulse"
+                  style={{ aspectRatio: "1 / 1" }}
+                />
+              )}
+            </div>
+          )}
+        </InView>
       ))}
     </div>
   );
