@@ -1,9 +1,9 @@
-pkgbase = Musik
+pkgbase = musik
 	pkgdesc = A music player
-	pkgver = 0.1.3
+	pkgver = 0.1.4
 	pkgrel = 1
 	url = https://github.com/arjav0703/music-app
-	install = Musik.install
+	install = musik.install
 	arch = x86_64
 	arch = aarch64
 	license = MIT
@@ -18,7 +18,7 @@ pkgbase = Musik
 	depends = webkit2gtk-4.1
 	options = !strip
 	options = !debug
-	source_x86_64 = https://github.com/arjav0703/music-app/releases/download/app-v0.1.3/Musik_0.1.3_amd64.deb
+	source_x86_64 = https://github.com/arjav0703/music-app/releases/download/app-v0.1.4/musik_0.1.4_amd64.deb
 	sha256sums_x86_64 = 6fcee617c969828680ae54b8d9725ce9b491ec63ab31533686db4473d66b173f
 
-pkgname = Musik
+pkgname = musik
