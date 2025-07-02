@@ -25,7 +25,7 @@ export default function PlayerBar({
   currentTime, duration, onSeek, audioRef
 }: Props) {
   return (
-    <footer className="bg-neutral-900 border-t border-neutral-800 p-4 fixed bottom-0 left-0 right-0 z-50">
+    <footer className="p-4 h-auto border-b border-neutral-800 flex justify-between bg-black/60 backdrop-blur-xl w-5xl rounded-xl self-center fixed bottom-10 z-20">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0">
           {track.cover_data_url ? (
@@ -70,7 +70,7 @@ export default function PlayerBar({
             step={0.1}
             value={currentTime}
             onChange={(e) => onSeek(parseFloat(e.currentTarget.value))}
-            className="w-full"
+            className="w-lg mx-auto"
           />
           <div className="text-xs text-right font-mono">
             {formatTime(currentTime)} / {formatTime(duration)}

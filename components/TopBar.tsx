@@ -8,11 +8,11 @@ export interface HeaderProps {
 
 const TopBar: React.FC<HeaderProps> = ({ onScanFolder }) => {
   return (
-    <header className="p-4 border-b border-neutral-800 flex justify-between bg-white/30 backdrop-blur-4xl backdrop-brightness-70 w-5xl rounded-xl self-center fixed top-10 z-20">
+    <header className="p-4 h-auto border-b border-neutral-800 flex justify-between bg-black/50 backdrop-blur-xl w-5xl rounded-xl self-center fixed top-10 z-20">
       <h1 className="text-6xl font-hand mx-4">Musik</h1>
       <div className="flex gap-4">
         <Button onClick={onScanFolder}>
-          <FolderOpen className="w-4 h-4" />
+          <FolderOpen className="w-4 h-4"/>
         </Button>
         <a href="/settings">
           <Button>
