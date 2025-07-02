@@ -1,20 +1,11 @@
 "use client";
 import React from "react";
-import {
-  FolderOpen,
-  SkipBack,
-  SkipForward,
-  Play,
-  Pause,
-  Settings,
-  Link,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import TrackGrid from "@/components/TrackGrid";
 import PlayerBar from "@/components/PlayerBar";
 // import { formatTime } from "../utils/formatTime";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import TopBar from "@/components/TopBar";
 
 export default function Home() {
   const {
@@ -36,21 +27,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <header className="p-4 border-b border-neutral-800 flex justify-between">
-        <h1 className="text-6xl font-hand mx-4"> Musik </h1>
-        <div className="flex gap-4">
-          <Button onClick={pickAndScanFolder}>
-            <FolderOpen className="w-4 h-4 mr-2" /> Scan Folder
-          </Button>
-          <a href="/settings">
-            <Button>
-              <Settings className="w-4 h-4 mr-2" /> Settings
-            </Button>
-          </a>
-        </div>
-      </header>
+      <TopBar onScanFolder={pickAndScanFolder}/>
 
-      <ScrollArea className="flex-1 p-6 pb-24">
+      <ScrollArea className="flex-1 p-6 pb-24 z-10 mt-40">
         <TrackGrid tracks={playlist} onSelect={playTrack} />
       </ScrollArea>
 

@@ -1,5 +1,3 @@
-// TODO: Fix the theme
-
 import { Card, CardContent } from "@/components/ui/card";
 
 type Props = {
