@@ -12,13 +12,11 @@ const TopBar: React.FC<HeaderProps> = ({ onScanFolder }) => {
       <h1 className="text-6xl font-hand mx-4">Musik</h1>
       <div className="flex gap-4">
         <Button onClick={onScanFolder}>
-          <FolderOpen className="w-4 h-4 mr-2" />
-          Scan Folder
+          <FolderOpen className="w-4 h-4" />
         </Button>
         <a href="/settings">
           <Button>
-            <Settings className="w-4 h-4 mr-2" />
-            Settings
+            <Settings className="w-4 h-4" />
           </Button>
         </a>
       </div>
