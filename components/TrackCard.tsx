@@ -13,7 +13,7 @@ export default function TrackCard({ cover, title, artist, onClick }: Props) {
   return (
     <Card
       onClick={onClick}
-      className="cursor-pointer hover:ring-2 hover:scale-101 transition bg-transparent"
+      className="cursor-pointer hover:ring-2 active:scale-95 bg-transparent hover:bg-amber-50"
     >
       <CardHeader className="p-0 m-0">
         {cover ? (
