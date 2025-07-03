@@ -9,7 +9,7 @@ depends=('cairo' 'desktop-file-utils' 'gdk-pixbuf2' 'glib2' 'gtk3' 'hicolor-icon
 options=('!strip' '!debug')
 install=${pkgname}.install
 source_x86_64=("${url}/releases/download/app-v${pkgver}/${pkgname}_${pkgver}_amd64.deb")
-sha256sums_x86_64=('6fcee617c969828680ae54b8d9725ce9b491ec63ab31533686db4473d66b173f')
+sha256sums_x86_64=('99c47d3d6fea893aaf506d8b01adeeee799b2c763ea98ca2f9a5f364059ca717')
 package() {
   tar -xvf data.tar.gz -C "${pkgdir}"
 }
