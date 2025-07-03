@@ -1,6 +1,7 @@
 // // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod scan;
 use scan::scan_folder;
+mod spotdl;
 use std::fs;
 use tauri_plugin_fs::FsExt;
 //use serde_json::json;
@@ -34,7 +35,11 @@ pub fn run() {
         //
         //    Ok(())
         //})
-        .invoke_handler(tauri::generate_handler![load_file_bytes, scan_folder])
+        .invoke_handler(tauri::generate_handler![
+            load_file_bytes,
+            scan_folder,
+            catch_data_dir
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -49,4 +54,11 @@ fn load_file_bytes(path: String) -> Result<Vec<u8>, String> {
             Err(format!("[load_file_bytes] failed to read file: {}", e))
         }
     }
+}
+
+#[tauri::command]
+async fn catch_data_dir(invoke_message: String) {
+    let data_dir = invoke_message;
+    println!("catch data dir invoke; data_dir: {}", data_dir);
+    spotdl::init_download(data_dir).await;
 }

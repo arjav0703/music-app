@@ -7,6 +7,7 @@ import PlayerBar from "@/components/PlayerBar";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import TopBar from "@/components/TopBar";
 import { appDataDir } from '@tauri-apps/api/path';
+import { invoke } from "@tauri-apps/api/core";
 
 export default function Home() {
   const {
@@ -34,6 +35,7 @@ export default function Home() {
       try {
         const path = await appDataDir();
         setAppDataDirPath(path);
+        invoke('catch_data_dir',  {  invokeMessage: path })
       } catch (err: any) {
         console.error('Failed to get appDataDir:', err);
         setError(err?.message ?? 'Unknown error');

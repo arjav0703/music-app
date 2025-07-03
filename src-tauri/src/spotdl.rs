@@ -1,4 +1,4 @@
-pub async fn init_download() {
+pub async fn init_download(data_dir: String) {
     let platform = tauri_plugin_os::platform();
 
     log::info!("[spotdl] Detected platform: {}", platform);
@@ -9,12 +9,11 @@ pub async fn init_download() {
         panic!("[spotdl] Unsupported platform: {}", platform);
     }
 
-    let app_config_dir = std::env::var("DOCUMENT");
-    println!("[spotdl] App config directory: {:?}", app_config_dir);
+    download_spotdl_binary(download_url.expect("awd"), data_dir)
+        .await
+        .expect("Failed to download spotdl binary");
 
-    //download_spotdl_binary(download_url.expect("awd"), "spotdl".to_string())
-    //    .await
-    //    .expect("Failed to download spotdl binary");
+    println!("[spotdl] Downloaded spotdl binary successfully");
 }
 
 fn platform_test(platform: &str) -> (bool, Option<String>) {
@@ -39,9 +38,7 @@ fn platform_test(platform: &str) -> (bool, Option<String>) {
     }
 }
 
-use log::debug;
 use std::fs;
-use tauri::path::BaseDirectory;
 use tauri_plugin_http::reqwest::get;
 
 async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), String> {
@@ -57,7 +54,7 @@ async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), St
 
     fs::create_dir_all("bin").map_err(|e| e.to_string())?;
     fs::write(
-        format!("bin/{}", save_path),
+        format!("{}/spotdl", save_path),
         res.unwrap().bytes().await.map_err(|e| e.to_string())?,
     )
     .map_err(|e| e.to_string())?;

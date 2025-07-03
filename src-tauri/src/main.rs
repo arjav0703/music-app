@@ -5,6 +5,5 @@ pub mod spotdl;
 
 #[tokio::main]
 async fn main() {
-    spotdl::init_download().await;
     musik_lib::run()
 }
