@@ -12,3 +12,5 @@
     Implemet keeb shorcuts like CTRL + O and FN shortcuts for music control. (tauri docs - https://v2.tauri.app/plugin/global-shortcut/)
 
 4. ✅ Add file based logging.
+5. Update the settings page to be a popup rather than a route to achieve One page app feel
+5. Integrate Playlist syncing from spotify using spotdl
