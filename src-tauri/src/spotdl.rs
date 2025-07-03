@@ -1,8 +1,16 @@
-pub fn init_download() {
+pub async fn init_download() {
     let platform = tauri_plugin_os::platform();
 
+    log::info!("[spotdl] Detected platform: {}", platform);
+
     let (test_passed, download_url) = platform_test(platform);
+
+    if !test_passed {
+        panic!("[spotdl] Unsupported platform: {}", platform);
+    }
+
     download_spotdl_binary(download_url.expect("awd"), "spotdl".to_string())
+        .await
         .expect("Failed to download spotdl binary");
 }
 
@@ -28,24 +36,34 @@ fn platform_test(platform: &str) -> (bool, Option<String>) {
     }
 }
 
-//use reqwest::blocking::get;
-use std::fs::File;
-use std::io::copy;
-use std::path::Path;
+use std::fs;
 use tauri_plugin_http::reqwest::get;
 
-fn download_spotdl_binary(url: String, save_path: String) -> Result<(), String> {
-    let mut resp = get(&url).map_err(|e| e.to_string())?;
-    let mut out = File::create(&save_path).map_err(|e| e.to_string())?;
-    copy(&mut resp, &mut out).map_err(|e| e.to_string())?;
+async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), String> {
+    let res = get(&url).await;
+    if res.is_err() {
+        return Err(format!(
+            "Failed to download spotdl binary: {}",
+            res.unwrap_err()
+        ));
+    }
+
+    log::info!("[spotdl] Binary downloaded");
+
+    fs::create_dir_all("bin").map_err(|e| e.to_string())?;
+    fs::write(
+        format!("bin/{}", save_path),
+        res.unwrap().bytes().await.map_err(|e| e.to_string())?,
+    )
+    .map_err(|e| e.to_string())?;
 
     // Make the binary executable (on Unix)
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = out.metadata().map_err(|e| e.to_string())?.permissions();
-        perms.set_mode(0o755);
-        std::fs::set_permissions(&save_path, perms).map_err(|e| e.to_string())?;
-    }
+    //#[cfg(unix)]
+    //{
+    //    use std::os::unix::fs::PermissionsExt;
+    //    let mut perms = out.metadata().map_err(|e| e.to_string())?.permissions();
+    //    perms.set_mode(0o755);
+    //    std::fs::set_permissions(&save_path, perms).map_err(|e| e.to_string())?;
+    //}
     Ok(())
 }

@@ -1,7 +1,6 @@
 use lofty::file::TaggedFileExt;
 use lofty::probe::Probe;
 use lofty::tag::Accessor;
-use log;
 use rayon::prelude::*;
 use serde::Serialize;
 use std::time::Instant;

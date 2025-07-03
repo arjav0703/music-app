@@ -2,10 +2,10 @@
 mod scan;
 use scan::scan_folder;
 use std::fs;
+use tauri_plugin_fs::FsExt;
 //use serde_json::json;
 //use tauri::Wry;
 //use tauri_plugin_store::StoreExt;
-use tauri_plugin_log::{Target, TargetKind};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -14,7 +14,6 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(
@@ -24,8 +23,17 @@ pub fn run() {
                         file_name: Some("logs".to_string()),
                     },
                 ))
+                .level(log::LevelFilter::Info)
                 .build(),
         )
+        .plugin(tauri_plugin_fs::init())
+        .setup(|app| {
+            let scope = app.fs_scope();
+            scope.allow_directory("dir", false);
+            dbg!(scope.is_allowed("dir"));
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![load_file_bytes, scan_folder])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

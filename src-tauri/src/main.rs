@@ -3,7 +3,8 @@
 pub mod scan;
 pub mod spotdl;
 
-fn main() {
-    spotdl::init_download();
+#[tokio::main]
+async fn main() {
+    spotdl::init_download().await;
     musik_lib::run()
 }
