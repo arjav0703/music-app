@@ -27,18 +27,14 @@ export default function Home() {
     seek,
   } = useAudioPlayer();
 
-  const [appDataDirPath, setAppDataDirPath] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
+  // DO NOT TOUCH!! (used to send data dir to backend)
   useEffect(() => {
     async function fetchAppDataDir() {
       try {
         const path = await appDataDir();
-        setAppDataDirPath(path);
         invoke('catch_data_dir',  {  invokeMessage: path })
       } catch (err: any) {
         console.error('Failed to get appDataDir:', err);
-        setError(err?.message ?? 'Unknown error');
       }
     }
 
@@ -48,7 +44,6 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
       <TopBar onScanFolder={pickAndScanFolder}/>
-      {appDataDirPath}
       <ScrollArea className="flex-1 p-6 pb-24 z-10 mt-40">
         <TrackGrid tracks={playlist} onSelect={playTrack} />
       </ScrollArea>
