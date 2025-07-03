@@ -37,35 +37,63 @@ fn platform_test(platform: &str) -> (bool, Option<String>) {
         }
     }
 }
-
+//
+//use std::fs;
+//use tauri_plugin_http::reqwest::get;
+//
+//async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), String> {
+//    let res = get(&url).await;
+//    if res.is_err() {
+//        return Err(format!(
+//            "Failed to download spotdl binary: {}",
+//            res.unwrap_err()
+//        ));
+//    }
+//
+//    log::info!("[spotdl] Binary downloaded");
+//
+//    fs::create_dir_all("bin").map_err(|e| e.to_string())?;
+//    fs::write(
+//        format!("{}/spotdl", save_path),
+//        res.unwrap().bytes().await.map_err(|e| e.to_string())?,
+//    )
+//    .map_err(|e| e.to_string())?;
+//
+//    // Make the binary executable (on Unix)
+//    #[cfg(unix)]
+//    {}
+//
+//    Ok(())
+//}
+//
 use std::fs;
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 use tauri_plugin_http::reqwest::get;
 
 async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), String> {
     let res = get(&url).await;
-    if res.is_err() {
-        return Err(format!(
-            "Failed to download spotdl binary: {}",
-            res.unwrap_err()
-        ));
+    if let Err(e) = res {
+        return Err(format!("Failed to download spotdl binary: {}", e));
     }
+    let resp = res.unwrap();
 
     log::info!("[spotdl] Binary downloaded");
 
-    fs::create_dir_all("bin").map_err(|e| e.to_string())?;
-    fs::write(
-        format!("{}/spotdl", save_path),
-        res.unwrap().bytes().await.map_err(|e| e.to_string())?,
-    )
-    .map_err(|e| e.to_string())?;
+    fs::create_dir_all(&save_path).map_err(|e| e.to_string())?;
 
-    // Make the binary executable (on Unix)
-    //#[cfg(unix)]
-    //{
-    //    use std::os::unix::fs::PermissionsExt;
-    //    let mut perms = out.metadata().map_err(|e| e.to_string())?.permissions();
-    //    perms.set_mode(0o755);
-    //    std::fs::set_permissions(&save_path, perms).map_err(|e| e.to_string())?;
-    //}
+    let out_path = format!("{}/spotdl", save_path);
+    let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
+    fs::write(&out_path, bytes).map_err(|e| e.to_string())?;
+
+    #[cfg(unix)]
+    {
+        let mut perms = fs::metadata(&out_path)
+            .map_err(|e| e.to_string())?
+            .permissions();
+        perms.set_mode(0o755);
+        fs::set_permissions(&out_path, perms).map_err(|e| e.to_string())?;
+    }
+
     Ok(())
 }
