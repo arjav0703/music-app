@@ -1,5 +1,3 @@
-use std::env;
-use tauri::path::BaseDirectory;
 pub async fn init_download() {
     let platform = tauri_plugin_os::platform();
 
@@ -10,6 +8,9 @@ pub async fn init_download() {
     if !test_passed {
         panic!("[spotdl] Unsupported platform: {}", platform);
     }
+
+    let app_config_dir = std::env::var("DOCUMENT");
+    println!("[spotdl] App config directory: {:?}", app_config_dir);
 
     //download_spotdl_binary(download_url.expect("awd"), "spotdl".to_string())
     //    .await
