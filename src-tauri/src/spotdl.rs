@@ -187,7 +187,7 @@ fn exec_spotdl(
 
     let mut output = Command::new(binary_path)
         .arg("download")
-        .arg(format!("'{}'", spotify_url))
+        .arg(format!("{}", spotify_url))
         .stdout(Stdio::inherit())
         .spawn()
         .map_err(|e| format!("Failed to execute spotdl: {}", e))?;
