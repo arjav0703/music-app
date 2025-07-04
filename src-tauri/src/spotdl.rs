@@ -71,7 +71,6 @@ fn platform_test(platform: &str) -> (bool, Option<String>) {
 //    Ok(())
 //}
 //
-use log::info;
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -111,19 +110,73 @@ fn check_spotdl_binary_exists(save_path: &str) -> bool {
 
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
-pub fn get_spotify_url(app_handle: &AppHandle) -> Result<String, Box<dyn std::error::Error>> {
+fn get_spotify_url(app_handle: &AppHandle) -> Result<String, Box<dyn std::error::Error>> {
     let mut store = app_handle.store("settings.json")?;
 
-    let spotify_url = store
+    let mut spotify_url = store
         .get("spotify_url")
-        .expect("Failed to get spotify_url from store");
+        .expect("Failed to get spotify_url from store")
+        .to_string();
+    spotify_url = spotify_url.trim_matches('"').to_string();
+
+    store.close_resource();
 
     Ok(spotify_url.to_string())
+}
+
+fn get_data_dir(app_handle: &AppHandle) -> Result<String, Box<dyn std::error::Error>> {
+    let mut store = app_handle.store("settings.json")?;
+
+    let mut data_dir = store
+        .get("data_dir")
+        .expect("Failed to get data_dir from store")
+        .to_string();
+    store.close_resource();
+    data_dir = data_dir.trim_matches('"').to_string();
+
+    Ok(data_dir.to_string())
 }
 
 #[tauri::command]
 pub fn download_playlist(app_handle: AppHandle) {
     println!("[spotdl] Starting playlist download...");
-    let sporifyi_url = get_spotify_url(&app_handle).expect("Failed to get spotify_url from store");
-    println!("[spotdl] Spotify URL: {}", sporifyi_url);
+
+    let spotify_url = get_spotify_url(&app_handle).expect("Failed to get spotify_url from store");
+    let data_dir = get_data_dir(&app_handle).expect("Failed to get data_dir from store");
+
+    println!(
+        "[spotdl] Spotify URL: {} , Data_dir: {}",
+        &spotify_url, &data_dir
+    );
+
+    #[cfg(unix)]
+    {
+        let binary_path = format!("{}/spotdl", data_dir);
+        println!("[spotdl] Binary path: {}", binary_path);
+
+        exec_spotdl(&binary_path, &spotify_url, &data_dir).expect("Failed to execute spotdl");
+    }
+
+    #[cfg(windows)]
+    {
+        let binary_path = format!("{}/spotdl.exe", data_dir);
+        exec_spotdl(binary_path, spotify_url, data_dir);
+    }
+}
+
+fn exec_spotdl(binary_path: &str, spotify_url: &str, data_dir: &str) -> Result<(), String> {
+    use std::process::Command;
+
+    let output = Command::new(binary_path)
+        .arg("--path")
+        .arg(data_dir)
+        .arg(spotify_url)
+        .output()
+        .map_err(|e| format!("Failed to execute spotdl: {}", e))?;
+
+    if !output.status.success() {
+        return Err(format!("spotdl failed with status: {}", output.status));
+    }
+
+    Ok(())
 }

@@ -20,19 +20,20 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_fs::init())
-        .setup(|app| {
-            let store = app.store("settings.json")?;
-
-            let spotify_utl = store
-                .get("spotify_url")
-                .expect("Failed to get value from store");
-            println!("{}", spotify_utl); // {"value":5}
-
-            // Remove the store from the resource table
-            store.close_resource();
-
-            Ok(())
-        })
+        //.setup(|app| {
+        //    let store = app.store("settings.json")?;
+        //    let data_dir = app.data_dir();
+        //
+        //    let spotify_utl = store
+        //        .get("spotify_url")
+        //        .expect("Failed to get value from store");
+        //    println!("{}", spotify_utl); // {"value":5}
+        //
+        //    // Remove the store from the resource table
+        //    store.close_resource();
+        //
+        //    Ok(())
+        //})
         .invoke_handler(tauri::generate_handler![
             load_file_bytes,
             scan_folder,
@@ -57,9 +58,15 @@ fn load_file_bytes(path: String) -> Result<Vec<u8>, String> {
 }
 
 #[tauri::command]
-async fn catch_data_dir(invoke_message: String) {
+async fn catch_data_dir(invoke_message: String, app_handle: tauri::AppHandle) {
     let data_dir = invoke_message;
     println!("catch data dir invoke; data_dir: {}", data_dir);
+
+    let store = app_handle.store("settings.json").unwrap();
+    store.set("data_dir", data_dir.clone());
+    store.save().unwrap();
+    store.close_resource();
+
     spotdl::init_download(data_dir).await;
 }
 
