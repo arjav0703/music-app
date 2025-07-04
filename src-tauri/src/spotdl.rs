@@ -71,6 +71,7 @@ fn platform_test(platform: &str) -> (bool, Option<String>) {
 //    Ok(())
 //}
 //
+use log::info;
 use std::fs;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -106,4 +107,23 @@ async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), St
 fn check_spotdl_binary_exists(save_path: &str) -> bool {
     let out_path = format!("{}/", save_path);
     fs::metadata(&out_path).is_ok()
+}
+
+use tauri::AppHandle;
+use tauri_plugin_store::StoreExt;
+pub fn get_spotify_url(app_handle: &AppHandle) -> Result<String, Box<dyn std::error::Error>> {
+    let mut store = app_handle.store("settings.json")?;
+
+    let spotify_url = store
+        .get("spotify_url")
+        .expect("Failed to get spotify_url from store");
+
+    Ok(spotify_url.to_string())
+}
+
+#[tauri::command]
+pub fn download_playlist(app_handle: AppHandle) {
+    println!("[spotdl] Starting playlist download...");
+    let sporifyi_url = get_spotify_url(&app_handle).expect("Failed to get spotify_url from store");
+    println!("[spotdl] Spotify URL: {}", sporifyi_url);
 }

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { useAudioPlayer } from "@/hooks/useAudioPlayer"
 import TextScramble from "@/components/Scrambletext"
 import { Input } from "@/components/ui/input"
+import { invoke } from "@tauri-apps/api/core"
+import { info } from "@tauri-apps/plugin-log"
 
 export default function SettingsPage() {
   const { pickAndScanFolder } = useAudioPlayer();
@@ -38,10 +40,20 @@ export default function SettingsPage() {
     const store: Store = await load("settings.json");
     await store.set("spotify_url", spotifyUrl);
     await store.save();
+    info("Spotify URL saved")
 
     setStatus("done");
-
+    
     setTimeout(() => setStatus("idle"), 2000);
+  };
+
+  const handleDownloadClick = async () => {
+    try {
+      await invoke("download_playlist");
+      console.log("Download started successfully");
+    } catch (error) {
+      console.error("Error starting download:", error);
+    }
   };
 
   return (
@@ -87,9 +99,14 @@ export default function SettingsPage() {
               <p className="mt-2 text-green-400">Saved!</p>
             )}
           </section>
+
+          <section>
+            <Button onClick={handleDownloadClick} className="mt-4">
+              Start Download
+            </Button>
+          </section>
         </div>
       </main>
     </div>
   );
 }
-
