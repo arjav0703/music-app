@@ -164,7 +164,10 @@ pub fn download_playlist(app_handle: AppHandle) {
     #[cfg(windows)]
     {
         let binary_path = format!("{}/spotdl.exe", data_dir);
-        exec_spotdl(binary_path, spotify_url, data_dir);
+        println!("[spotdl] Binary path: {}", binary_path);
+
+        exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
+            .expect("Failed to execute spotdl");
     }
 }
 
