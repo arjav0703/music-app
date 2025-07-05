@@ -19,6 +19,6 @@ pkgbase = musik
 	options = !strip
 	options = !debug
 	source_x86_64 = https://github.com/arjav0703/music-app/releases/download/app-v0.1.5/musik_0.1.5_amd64.deb
-	sha256sums_x86_64 = 99c47d3d6fea893aaf506d8b01adeeee799b2c763ea98ca2f9a5f364059ca717
+	sha256sums_x86_64 = e375f95d3fab0c01b9313664edbb62bdae5e41089ce53beda04e2644130df4e7
 
 pkgname = musik
