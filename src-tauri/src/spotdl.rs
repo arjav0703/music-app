@@ -1,6 +1,6 @@
 pub async fn init_download(data_dir: String) {
     if check_spotdl_binary_exists(&data_dir) {
-        println!("[spotdl] spotdl binary already exists at: {}", data_dir);
+        println!("[spotdl] spotdl binary already exists at: {data_dir}");
         return;
     }
 
@@ -8,12 +8,12 @@ pub async fn init_download(data_dir: String) {
 
     let platform = tauri_plugin_os::platform();
 
-    log::info!("[spotdl] Detected platform: {}", platform);
+    log::info!("[spotdl] Detected platform: {platform}");
 
     let (test_passed, download_url) = platform_test(platform);
 
     if !test_passed {
-        panic!("[spotdl] Unsupported platform: {}", platform);
+        panic!("[spotdl] Unsupported platform: {platform}");
     }
 
     download_spotdl_binary(download_url.expect("awd"), data_dir)
@@ -39,7 +39,7 @@ fn platform_test(platform: &str) -> (bool, Option<String>) {
             (true, Some("https://github.com/spotDL/spotify-downloader/releases/download/v4.2.11/spotdl-4.2.11-win32.exe".to_string()))
         }
         _ => {
-            log::warn!("[spotdl] Unsupported platform: {}", platform);
+            log::warn!("[spotdl] Unsupported platform: {platform}");
             (false, None)
         }
     }
@@ -81,7 +81,7 @@ use tauri_plugin_http::reqwest::get;
 async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), String> {
     let res = get(&url).await;
     if let Err(e) = res {
-        return Err(format!("Failed to download spotdl binary: {}", e));
+        return Err(format!("Failed to download spotdl binary: {e}"));
     }
     let resp = res.unwrap();
 
@@ -89,7 +89,7 @@ async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), St
 
     fs::create_dir_all(&save_path).map_err(|e| e.to_string())?;
 
-    let out_path = format!("{}/spotdl", save_path);
+    let out_path = format!("{save_path}/spotdl");
     let bytes = resp.bytes().await.map_err(|e| e.to_string())?;
     fs::write(&out_path, bytes).map_err(|e| e.to_string())?;
 
@@ -108,7 +108,7 @@ async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), St
 fn check_spotdl_binary_exists(save_path: &str) -> bool {
     #[cfg(unix)]
     {
-        let out_path = format!("{}/spotdl", save_path);
+        let out_path = format!("{save_path}/spotdl");
         if fs::metadata(&out_path).is_err() {
             return false;
         }
@@ -117,7 +117,7 @@ fn check_spotdl_binary_exists(save_path: &str) -> bool {
     }
     #[cfg(windows)]
     {
-        let out_path = format!("{}/spotdl.exe", save_path);
+        let out_path = format!("{save_path}/spotdl.exe");
         fs::metadata(&out_path).is_ok()
     }
 }
@@ -168,8 +168,8 @@ pub fn download_playlist(app_handle: AppHandle) {
 
     #[cfg(unix)]
     {
-        let binary_path = format!("{}/spotdl", data_dir);
-        println!("[spotdl] Binary path: {}", binary_path);
+        let binary_path = format!("{data_dir}/spotdl");
+        println!("[spotdl] Binary path: {binary_path}");
 
         exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
             .expect("Failed to execute spotdl");
@@ -189,29 +189,26 @@ use std::env;
 fn exec_spotdl(
     binary_path: &str,
     spotify_url: &str,
-    data_dir: &str,
+    _data_dir: &str,
     default_dir: &str,
 ) -> Result<(), String> {
     use std::process::{Command, Stdio};
 
     match env::set_current_dir(default_dir) {
-        Ok(_) => println!(
-            "Successfully changed the working directory to {:?}",
-            default_dir
-        ),
-        Err(e) => eprintln!("Error changing directory: {}", e),
+        Ok(_) => println!("Successfully changed the working directory to {default_dir}"),
+        Err(e) => eprintln!("Error changing directory: {e}"),
     }
 
     let mut output = Command::new(binary_path)
         .arg("download")
-        .arg(format!("{}", spotify_url))
+        .arg(spotify_url)
         .stdout(Stdio::inherit())
         .spawn()
-        .map_err(|e| format!("Failed to execute spotdl: {}", e))?;
+        .map_err(|e| format!("Failed to execute spotdl: {e}"))?;
 
     let _ = output
         .wait()
-        .map_err(|e| format!("Failed to wait for spotdl: {}", e))?;
+        .map_err(|e| format!("Failed to wait for spotdl: {e}"))?;
 
     Ok(())
 }

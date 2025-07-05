@@ -21,7 +21,7 @@ pub struct TrackMetadata {
 pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
     const EXTENSIONS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
 
-    log::info!("[{}] Starting folder scan......", path);
+    log::info!("[{path}] Starting folder scan......");
     let start = Instant::now();
 
     let tracks: Vec<TrackMetadata> = WalkDir::new(&path)
@@ -66,7 +66,7 @@ pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
                                 "application/octet-stream".into());
 
                         let b64 = base64::encode(pic.data());
-                        format!("data:{};base64,{}", mime, b64)
+                        format!("data:{mime};base64,{b64}")
                     });
 
                     (title, artist, album, cover_data_url)
