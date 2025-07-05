@@ -1,8 +1,10 @@
 pub async fn init_download(data_dir: String) {
     if check_spotdl_binary_exists(&data_dir) {
-        log::info!("[spotdl] spotdl binary already exists at: {}", data_dir);
+        println!("[spotdl] spotdl binary already exists at: {}", data_dir);
         return;
     }
+
+    println!("[spotdl] Starting spotdl binary download...");
 
     let platform = tauri_plugin_os::platform();
 
@@ -104,8 +106,20 @@ async fn download_spotdl_binary(url: String, save_path: String) -> Result<(), St
 }
 
 fn check_spotdl_binary_exists(save_path: &str) -> bool {
-    let out_path = format!("{}/", save_path);
-    fs::metadata(&out_path).is_ok()
+    #[cfg(unix)]
+    {
+        let out_path = format!("{}/spotdl", save_path);
+        if fs::metadata(&out_path).is_err() {
+            return false;
+        }
+        let perms = fs::metadata(&out_path).unwrap().permissions();
+        perms.mode() & 0o111 != 0
+    }
+    #[cfg(windows)]
+    {
+        let out_path = format!("{}/spotdl.exe", save_path);
+        fs::metadata(&out_path).is_ok()
+    }
 }
 
 use tauri::AppHandle;
