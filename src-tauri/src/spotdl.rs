@@ -170,9 +170,10 @@ pub fn download_playlist(app_handle: AppHandle) {
     {
         let binary_path = format!("{data_dir}/spotdl");
         println!("[spotdl] Binary path: {binary_path}");
-
-        exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
-            .expect("Failed to execute spotdl");
+        tauri::async_runtime::spawn(async move {
+            exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
+                .expect("Failed to execute spotdl");
+        });
     }
 
     #[cfg(windows)]
@@ -180,8 +181,10 @@ pub fn download_playlist(app_handle: AppHandle) {
         let binary_path = format!("{}/spotdl.exe", data_dir);
         println!("[spotdl] Binary path: {}", binary_path);
 
-        exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
-            .expect("Failed to execute spotdl");
+        tauri::async_runtime::spawn(async move {
+            exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
+                .expect("Failed to execute spotdl");
+        });
     }
 }
 

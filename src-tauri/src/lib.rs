@@ -66,7 +66,9 @@ async fn catch_data_dir(invoke_message: String, app_handle: tauri::AppHandle) {
     store.save().unwrap();
     store.close_resource();
 
-    spotdl::init_download(data_dir).await;
+    tauri::async_runtime::spawn(async move {
+        spotdl::init_download(data_dir).await;
+    });
 }
 
 //#[tauri::command]
