@@ -9,6 +9,7 @@ import TextScramble from "@/components/Scrambletext"
 import { Input } from "@/components/ui/input"
 import { invoke } from "@tauri-apps/api/core"
 import { info } from "@tauri-apps/plugin-log"
+import { message } from '@tauri-apps/plugin-dialog';
 
 export default function SettingsPage() {
   const { pickAndScanFolder } = useAudioPlayer()
@@ -48,6 +49,7 @@ export default function SettingsPage() {
   const handleDownloadClick = async () => {
     try {
       await invoke("download_playlist")
+      await message('This feature is not fully implemented yet.', { title: 'Musik', kind: 'info' });
       console.log("Download started successfully")
     } catch (error) {
       console.error("Error starting download:", error)
