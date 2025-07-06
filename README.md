@@ -16,7 +16,9 @@ cd music-app
 makepkg -si
 ```
 
-On other linux distros and windows, you can download the latest release from the [releases page](https://github.com/arjav0703/music-app/releases/latest). For macOS, you can build the app from source with the following steps:
+On other linux distros and windows, you can download the latest release from the [releases page](https://github.com/arjav0703/music-app/releases/latest).
+
+### Building from source
 
 ```bash
 git clone https://github.com/arjav0703/music-app.git
