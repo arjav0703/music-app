@@ -6,7 +6,6 @@ import PlayerBar from "@/components/PlayerBar";
 // import { formatTime } from "../utils/formatTime";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import TopBar from "@/components/TopBar";
-import { Input } from "@/components/ui/input";
 import { appDataDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -43,7 +42,6 @@ export default function Home() {
   }, []);
 
   const [searchQuery, setSearchQuery] = useState("");
-
   const filteredPlaylist = playlist.filter(
     (track) =>
       track.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -55,16 +53,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col">
-      <TopBar onScanFolder={pickAndScanFolder} />
-      <div className="p-4">
-        <Input
-          type="text"
-          placeholder="Search tracks..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full"
-        />
-      </div>
+      <TopBar
+        onScanFolder={pickAndScanFolder}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
+
       <ScrollArea className="flex-1 p-6 pb-24 z-10 mt-40">
         <TrackGrid
           tracks={filteredPlaylist}
