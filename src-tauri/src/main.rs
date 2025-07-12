@@ -5,5 +5,5 @@ pub mod spotdl;
 
 #[tokio::main]
 async fn main() {
-    musik_lib::run()
+    musik_lib::run();
 }

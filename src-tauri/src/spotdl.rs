@@ -1,14 +1,15 @@
+use log::info;
 pub async fn init_download(data_dir: String) {
     if check_spotdl_binary_exists(&data_dir) {
-        println!("[spotdl] spotdl binary already exists at: {data_dir}");
+        info!("[spotdl] spotdl binary already exists at: {data_dir}");
         return;
     }
 
-    println!("[spotdl] Starting spotdl binary download...");
+    info!("[spotdl] Starting spotdl binary download...");
 
     let platform = tauri_plugin_os::platform();
 
-    log::info!("[spotdl] Detected platform: {platform}");
+    info!("[spotdl] Detected platform: {platform}");
 
     let (test_passed, download_url) = platform_test(platform);
 
@@ -20,7 +21,7 @@ pub async fn init_download(data_dir: String) {
         .await
         .expect("Failed to download spotdl binary");
 
-    println!("[spotdl] Downloaded spotdl binary successfully");
+    info!("[spotdl] Downloaded spotdl binary successfully");
 }
 
 fn platform_test(platform: &str) -> (bool, Option<String>) {
@@ -156,12 +157,12 @@ fn get_settings(
 
 #[tauri::command]
 pub fn download_playlist(app_handle: AppHandle) {
-    println!("[spotdl] Starting playlist download...");
+    info!("[spotdl] Starting playlist download...");
 
     let (spotify_url, data_dir, default_dir) =
         get_settings(&app_handle).expect("Failed to get spotify_url from store");
 
-    println!(
+    info!(
         "[spotdl] Spotify URL: {} , Data_dir: {}",
         &spotify_url, &data_dir
     );
@@ -169,7 +170,7 @@ pub fn download_playlist(app_handle: AppHandle) {
     #[cfg(unix)]
     {
         let binary_path = format!("{data_dir}/spotdl");
-        println!("[spotdl] Binary path: {binary_path}");
+        info!("[spotdl] Binary path: {binary_path}");
         tauri::async_runtime::spawn(async move {
             exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
                 .expect("Failed to execute spotdl");
@@ -179,7 +180,7 @@ pub fn download_playlist(app_handle: AppHandle) {
     #[cfg(windows)]
     {
         let binary_path = format!("{}/spotdl.exe", data_dir);
-        println!("[spotdl] Binary path: {}", binary_path);
+        info!("[spotdl] Binary path: {}", binary_path);
 
         tauri::async_runtime::spawn(async move {
             exec_spotdl(&binary_path, &spotify_url, &data_dir, &default_dir)
@@ -198,8 +199,8 @@ fn exec_spotdl(
     use std::process::{Command, Stdio};
 
     match env::set_current_dir(default_dir) {
-        Ok(_) => println!("Successfully changed the working directory to {default_dir}"),
-        Err(e) => eprintln!("Error changing directory: {e}"),
+        Ok(_) => info!("Successfully changed the working directory to {default_dir}"),
+        Err(e) => info!("Error changing directory: {e}"),
     }
 
     let mut output = Command::new(binary_path)
