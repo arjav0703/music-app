@@ -1,5 +1,6 @@
 // // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 mod scan;
+use log::info;
 use scan::scan_folder;
 mod spotdl;
 use spotdl::download_playlist;
@@ -56,11 +57,11 @@ pub fn run() {
 
 #[tauri::command]
 fn load_file_bytes(path: String) -> Result<Vec<u8>, String> {
-    println!("[load_file_bytes] reading: {path}");
+    info!("[load_file_bytes] reading: {path}");
     match fs::read(&path) {
         Ok(data) => Ok(data),
         Err(e) => {
-            eprintln!("[load_file_bytes] Failed to read file: {path} ({e})");
+            info!("[load_file_bytes] Failed to read file: {path} ({e})");
             Err(format!("[load_file_bytes] failed to read file: {e}"))
         }
     }
@@ -69,7 +70,7 @@ fn load_file_bytes(path: String) -> Result<Vec<u8>, String> {
 #[tauri::command]
 async fn catch_data_dir(invoke_message: String, app_handle: tauri::AppHandle) {
     let data_dir = invoke_message;
-    println!("catch data dir invoke; data_dir: {data_dir}");
+    info!("catch data dir invoke; data_dir: {data_dir}");
 
     let store = app_handle.store("settings.json").unwrap();
     store.set("data_dir", data_dir.clone());
