@@ -8,6 +8,12 @@ import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import TopBar from "@/components/TopBar";
 import { appDataDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
+import {
+  isPermissionGranted,
+  requestPermission,
+  sendNotification,
+} from '@tauri-apps/plugin-notification';
+import { info, error } from '@tauri-apps/plugin-log';
 
 export default function Home() {
   const {
@@ -39,6 +45,28 @@ export default function Home() {
     }
 
     fetchAppDataDir();
+  }, []);
+
+  useEffect(() => {
+    async function InvokeNotification() {
+      try {
+        // let permissionGranted = await isPermissionGranted();
+        //
+        // if (!permissionGranted) {
+        //   const permission = await requestPermission();
+        //   permissionGranted = permission === 'granted';
+        // }
+        // if (permissionGranted) {
+        sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
+        info("Notification sent successfully");
+        // }
+
+      } catch (err: any) {
+        error(`Notification error: ${err.message}`);
+      }
+    }
+
+    InvokeNotification();
   }, []);
 
   const [searchQuery, setSearchQuery] = useState("");
