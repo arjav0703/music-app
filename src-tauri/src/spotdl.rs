@@ -125,6 +125,23 @@
 use log::info;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
+
+#[tauri::command]
+pub fn check_spotdl_exists() -> bool {
+    use which::which;
+
+    match which("spotdl") {
+        Ok(_) => {
+            info!("[spotdl] spotdl binary exists in PATH");
+            true
+        }
+        Err(e) => {
+            info!("[spotdl] spotdl binary does not exist in PATH: {e}");
+            false
+        }
+    }
+}
+
 fn get_settings(
     app_handle: &AppHandle,
 ) -> Result<(String, String, String), Box<dyn std::error::Error>> {

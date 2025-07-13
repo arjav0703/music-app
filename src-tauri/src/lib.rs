@@ -3,6 +3,7 @@ mod scan;
 use log::info;
 use scan::scan_folder;
 mod spotdl;
+use spotdl::check_spotdl_exists;
 use spotdl::download_playlist;
 use std::fs;
 use tauri_plugin_store::StoreExt;
@@ -48,6 +49,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             load_file_bytes,
             scan_folder,
+            check_spotdl_exists,
             catch_data_dir,
             //start_downloading,
             download_playlist

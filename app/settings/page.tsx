@@ -48,13 +48,24 @@ export default function SettingsPage() {
 
   const handleDownloadClick = async () => {
     try {
-      await invoke("download_playlist")
-      await message('This feature is not fully implemented yet.', { title: 'Musik', kind: 'info' });
-      console.log("Download started successfully")
+      const spotdlExists: boolean = await invoke<boolean>("check_spotdl_exists");
+
+      if (!spotdlExists) {
+        info("frontend - SpotDL is not installed. Please install it first.");
+        await message("SpotDL is not installed. Please install it first.", {
+          title: "Musik",
+          kind: "error",
+        });
+        return;
+      }
+
+      await invoke("download_playlist");
+      console.log("Download started successfully");
     } catch (error) {
-      console.error("Error starting download:", error)
+      console.error("Error starting download:", error);
     }
-  }
+  };
+
 
   return (
     <div className="bg-black min-h-screen text-white px-6 py-10">
