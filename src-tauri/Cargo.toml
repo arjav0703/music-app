@@ -1,6 +1,6 @@
 [package]
 name = "Musik"
-version = "0.1.5"
+version = "0.1.6"
 description = "A music playe"
 authors = ["Arjav Jain <arjavjain0703@gmail.com>"]
 edition = "2021"
