@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { invoke } from "@tauri-apps/api/core"
 import { info } from "@tauri-apps/plugin-log"
 import { message } from '@tauri-apps/plugin-dialog';
-import { platform } from '@tauri-apps/plugin-os';
 
 export default function SettingsPage() {
   const { pickAndScanFolder } = useAudioPlayer()
@@ -50,15 +49,6 @@ export default function SettingsPage() {
   const handleDownloadClick = async () => {
     try {
       const spotdlExists: boolean = await invoke<boolean>("check_spotdl_exists");
-
-      if (platform() == "windows") {
-        info("frontend - This feature is not available on Windows.");
-        await message("This feature is not available on Windows.", {
-          title: "Musik",
-          kind: "error",
-        });
-        return;
-      }
 
       if (!spotdlExists) {
         info("frontend - SpotDL is not installed. Please install it first.");
