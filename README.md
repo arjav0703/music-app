@@ -28,6 +28,15 @@ npx tauri build
 ```
 You can then find the built application in the `src-tauri/target/release` directory.
 
+## Usage Instructions
+
+1. Install spotdl (more details on https://spotdl.readthedocs.io/en/latest/installation/)
+```bash
+pip install spotdl
+```
+
+2. Use the preferred binary for your operating system
+
 --- 
 <div align="center">
   <a href="https://shipwrecked.hackclub.com/?t=ghrm" target="_blank">
