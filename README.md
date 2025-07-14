@@ -9,17 +9,18 @@ The current version is a work in progress, and more features will be added in th
 
 ## Installation
 
-Arch Linux users can use the provided PKGBUILD to install the application.
+Arch Linux users can use the AUR package `musik` to install the application:
+
+Example using `yay`:
 ```bash
-git clone https://github.com/arjav0703/music-app.git
-cd music-app
-makepkg -si
+yay -S musik
 ```
 
 On other linux distros and windows, you can download the latest release from the [releases page](https://github.com/arjav0703/music-app/releases/latest).
 
 ### Building from source
 
+Note that building from source requires npm and cargo to be installed on your system.
 ```bash
 git clone https://github.com/arjav0703/music-app.git
 cd music-app
