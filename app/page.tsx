@@ -26,6 +26,7 @@ export default function Home() {
     pickAndScanFolder,
     LoadDefaultDir,
     playTrack,
+    shuffle,
     play,
     pause,
     next,
@@ -102,6 +103,7 @@ export default function Home() {
         <PlayerBar
           track={playlist[current]}
           isPlaying={isPlaying}
+          onShuffle={shuffle}
           onPrev={prev}
           onTogglePlay={isPlaying ? pause : play}
           onNext={next}

@@ -1,10 +1,11 @@
 import React, { RefObject } from "react";
-import { SkipBack, SkipForward, Play, Pause } from "lucide-react";
+import { SkipBack, SkipForward, Play, Pause, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
   track: { cover_data_url?: string; title?: string; name: string; artist?: string; };
   isPlaying: boolean;
+  onShuffle(): void;
   onPrev(): void;
   onTogglePlay(): void;
   onNext(): void;
@@ -22,11 +23,11 @@ function formatTime(sec: number): string {
 
 export default function PlayerBar({
   track, isPlaying, onPrev, onTogglePlay, onNext,
-  currentTime, duration, onSeek, audioRef
+  currentTime, duration, onSeek, audioRef, onShuffle
 }: Props) {
   return (
     <footer className="p-4 h-auto border-b border-neutral-800 flex justify-between bg-black/60 backdrop-blur-xl w-5xl rounded-xl self-center fixed bottom-10 z-20">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 mr-5">
         <div className="flex items-center gap-3 min-w-0">
           {track.cover_data_url ? (
             <img
@@ -47,20 +48,24 @@ export default function PlayerBar({
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="flex items-center gap-4">
-          <Button size="icon" variant="ghost" onClick={onPrev}>
-            <SkipBack />
-          </Button>
 
-          <Button size="icon" variant="ghost" onClick={onTogglePlay}>
-            {isPlaying ? <Pause /> : <Play />}
-          </Button>
+      <div className="flex items-center gap-4">
+        <Button size="icon" variant="ghost" onClick={onShuffle} disabled={!isPlaying}>
+          <Shuffle />
+        </Button>
+        <Button size="icon" variant="ghost" onClick={onPrev}>
+          <SkipBack />
+        </Button>
 
-          <Button size="icon" variant="ghost" onClick={onNext}>
-            <SkipForward />
-          </Button>
-        </div>
+        <Button size="icon" variant="ghost" onClick={onTogglePlay}>
+          {isPlaying ? <Pause /> : <Play />}
+        </Button>
+
+        <Button size="icon" variant="ghost" onClick={onNext}>
+          <SkipForward />
+        </Button>
 
         <div className="flex-1 px-4">
           <input

@@ -17,10 +17,10 @@ export function useAudioPlayer() {
 
   const { persist } = usePlaylistStore();
 
-  const LoadDefaultDir = useCallback(async() => {
+  const LoadDefaultDir = useCallback(async () => {
     const store: Store = await load("settings.json");
     const dir = await store.get("default_dir");
-    if (typeof dir === "string") {  
+    if (typeof dir === "string") {
       await scanAndSetPlaylist(dir, 0);
     }
   }, [persist])
@@ -84,6 +84,15 @@ export function useAudioPlayer() {
   );
 
   // controls
+  const shuffle = () => {
+    if (playlist.length === 0) return;
+    const shuffled = [...playlist].sort(() => Math.random() - 0.5);
+    setPlaylist(shuffled);
+    setCurrent(0);
+    setIsPlaying(true);
+    persist(shuffled, 0);
+  }
+
   const play = () => {
     audioRef.current?.play();
     setIsPlaying(true);
@@ -159,6 +168,7 @@ export function useAudioPlayer() {
     pickAndScanFolder,
     LoadDefaultDir,
     playTrack,
+    shuffle,
     play,
     pause,
     next,
