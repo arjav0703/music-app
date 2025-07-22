@@ -28,7 +28,7 @@ export function useLocalKeyboardShortcuts({
         `Key pressed: ${event.key}, ctrl: ${event.ctrlKey}, target: ${event.target}`,
       );
 
-      // Ignore key presses if they occur in an input or textarea
+      // Ignore key presses if they occur in an input or textareaa
       if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement

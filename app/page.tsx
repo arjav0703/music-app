@@ -5,7 +5,7 @@ import TrackGrid from "@/components/TrackGrid";
 import PlayerBar from "@/components/PlayerBar";
 // import { formatTime } from "../utils/formatTime";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
-import { useLocalKeyboardShortcuts } from "../hooks/useLocalKeyboardShortcuts";
+import { useLocalKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import TopBar from "@/components/TopBar";
 import { appDataDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
@@ -15,7 +15,7 @@ import {
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 import { info, error } from "@tauri-apps/plugin-log";
-
+// 
 export default function Home() {
   const {
     playlist,

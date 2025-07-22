@@ -164,7 +164,7 @@ export default function PlayerBar({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-4">
+        {/* <div className="flex items-center gap-2 ml-4">
           <Button size="icon" variant="ghost" onClick={handleToggleMute}>
             {getVolumeIcon()}
           </Button>
@@ -177,7 +177,7 @@ export default function PlayerBar({
             onChange={handleVolumeChange}
             className="w-24"
           />
-        </div>
+        </div> */}
       </div>
       <audio ref={audioRef} onEnded={onNext} className="hidden" />
     </footer>
