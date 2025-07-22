@@ -75,13 +75,14 @@ export default function Home() {
 
   // Register keyboard shortcuts
   useLocalKeyboardShortcuts({
-    onPlayPause: isPlaying ? pause : play,
+    audioRef,
     onNext: next,
     onPrev: prev,
     onShuffle: shuffle,
     onVolumeUp: volumeUp,
     onVolumeDown: volumeDown,
     onMute: toggleMute,
+    isPlaying: isPlaying,
   });
 
   const [searchQuery, setSearchQuery] = useState("");

@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input";
 import { invoke } from "@tauri-apps/api/core";
 import { info } from "@tauri-apps/plugin-log";
 import { message } from "@tauri-apps/plugin-dialog";
-import { useLocalKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function SettingsPage() {
   const {
@@ -28,17 +27,6 @@ export default function SettingsPage() {
   const [defaultDir, setDefaultDir] = useState<string>("");
   const [spotifyUrl, setSpotifyUrl] = useState<string>("");
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
-
-  // Register keyboard shortcuts
-  useLocalKeyboardShortcuts({
-    onPlayPause: isPlaying ? pause : play,
-    onNext: next,
-    onPrev: prev,
-    onShuffle: shuffle,
-    onVolumeUp: volumeUp,
-    onVolumeDown: volumeDown,
-    onMute: toggleMute,
-  });
 
   useEffect(() => {
     (async () => {

@@ -1,4 +1,10 @@
-import { useEffect } from "react";
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import { info, error, trace } from "@tauri-apps/plugin-log";
 
 type ShortcutCallbacks = {
@@ -9,17 +15,21 @@ type ShortcutCallbacks = {
   onVolumeUp?: () => void;
   onVolumeDown?: () => void;
   onMute?: () => void;
+  audioRef: RefObject<HTMLAudioElement | null>;
+  isPlaying: boolean;
 };
 
 export function useLocalKeyboardShortcuts({
-  onPlayPause,
   onNext,
   onPrev,
   onShuffle,
   onVolumeUp,
   onVolumeDown,
   onMute,
+  isPlaying,
+  audioRef,
 }: ShortcutCallbacks) {
+  // Don't need to create a new state since we're using the prop directly
   useEffect(() => {
     info("Setting up keyboard shortcuts");
 
@@ -41,17 +51,18 @@ export function useLocalKeyboardShortcuts({
         // Check for keydown events
         switch (event.key) {
           case " ":
-            if (onPlayPause) {
-              event.preventDefault();
-              info("Play/Pause shortcut triggered");
-              try {
-                onPlayPause();
-                info("Play/Pause action completed");
-              } catch (err: any) {
-                error(`Error in play/pause: ${err.message}`);
+            event.preventDefault();
+            info("Play/pause shortcut triggered");
+            try {
+              if (isPlaying) {
+                audioRef.current?.pause();
+                info("Pause action completed");
+              } else {
+                audioRef.current?.play();
+                info("Play action completed");
               }
-            } else {
-              trace("No play/pause handler registered");
+            } catch (err: any) {
+              error(`Error in play/pause: ${err.message}`);
             }
             break;
 
@@ -166,12 +177,13 @@ export function useLocalKeyboardShortcuts({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
-    onPlayPause,
     onNext,
     onPrev,
     onShuffle,
     onVolumeUp,
     onVolumeDown,
     onMute,
+    isPlaying,
+    audioRef,
   ]);
 }
