@@ -7,7 +7,6 @@ import PlayerBar from "@/components/PlayerBar";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import TopBar from "@/components/TopBar";
-import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
 import { appDataDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
 import {
@@ -131,7 +130,6 @@ export default function Home() {
           onToggleMute={toggleMute}
         />
       )}
-      <KeyboardShortcutsHelp />
     </div>
   );
 }
