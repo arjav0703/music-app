@@ -5,7 +5,7 @@ import TrackGrid from "@/components/TrackGrid";
 import PlayerBar from "@/components/PlayerBar";
 // import { formatTime } from "../utils/formatTime";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
-import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { useLocalKeyboardShortcuts } from "../hooks/useLocalKeyboardShortcuts";
 import TopBar from "@/components/TopBar";
 import { appDataDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
@@ -74,7 +74,7 @@ export default function Home() {
   }, []);
 
   // Register keyboard shortcuts
-  useKeyboardShortcuts({
+  useLocalKeyboardShortcuts({
     onPlayPause: isPlaying ? pause : play,
     onNext: next,
     onPrev: prev,
@@ -125,9 +125,6 @@ export default function Home() {
           duration={duration}
           onSeek={seek}
           audioRef={audioRef}
-          onVolumeUp={volumeUp}
-          onVolumeDown={volumeDown}
-          onToggleMute={toggleMute}
         />
       )}
     </div>

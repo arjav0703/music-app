@@ -11,7 +11,7 @@ import {
   Volume,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-// 
+//
 type Props = {
   track: {
     cover_data_url?: string;
@@ -54,9 +54,6 @@ export default function PlayerBar({
   onSeek,
   audioRef,
   onShuffle,
-  onVolumeUp,
-  onVolumeDown,
-  onToggleMute,
 }: Props) {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
@@ -92,14 +89,10 @@ export default function PlayerBar({
   };
 
   const handleToggleMute = () => {
-    if (onToggleMute) {
-      onToggleMute();
-    } else {
-      const audio = audioRef.current;
-      if (audio) {
-        audio.muted = !audio.muted;
-        setIsMuted(!isMuted);
-      }
+    const audio = audioRef.current;
+    if (audio) {
+      audio.muted = !audio.muted;
+      setIsMuted(!isMuted);
     }
   };
 

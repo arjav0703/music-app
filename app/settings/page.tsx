@@ -10,8 +10,7 @@ import { Input } from "@/components/ui/input";
 import { invoke } from "@tauri-apps/api/core";
 import { info } from "@tauri-apps/plugin-log";
 import { message } from "@tauri-apps/plugin-dialog";
-import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useLocalKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function SettingsPage() {
   const {
@@ -31,7 +30,7 @@ export default function SettingsPage() {
   const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
 
   // Register keyboard shortcuts
-  useKeyboardShortcuts({
+  useLocalKeyboardShortcuts({
     onPlayPause: isPlaying ? pause : play,
     onNext: next,
     onPrev: prev,
@@ -149,7 +148,6 @@ export default function SettingsPage() {
           </Button>
         </section>
       </main>
-      <KeyboardShortcutsHelp />
     </div>
   );
 }

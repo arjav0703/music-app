@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import { register, unregister } from "@tauri-apps/plugin-global-shortcut";
-import { info, error } from "@tauri-apps/plugin-log";
+import { info, error, trace } from "@tauri-apps/plugin-log";
 
 type ShortcutCallbacks = {
   onPlayPause?: () => void;
@@ -10,9 +9,9 @@ type ShortcutCallbacks = {
   onVolumeUp?: () => void;
   onVolumeDown?: () => void;
   onMute?: () => void;
-}; 
+};
 
-export function useKeyboardShortcuts({
+export function useLocalKeyboardShortcuts({
   onPlayPause,
   onNext,
   onPrev,
@@ -22,123 +21,157 @@ export function useKeyboardShortcuts({
   onMute,
 }: ShortcutCallbacks) {
   useEffect(() => {
-    const registerShortcuts = async () => {
+    info("Setting up keyboard shortcuts");
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      trace(
+        `Key pressed: ${event.key}, ctrl: ${event.ctrlKey}, target: ${event.target}`,
+      );
+
+      // Ignore key presses if they occur in an input or textarea
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        trace("Ignoring keypress in input/textarea");
+        return;
+      }
+
       try {
-        // media control shortcuts
-        if (onPlayPause) {
-          await register("Space", () => {
-            info("Play/Pause shortcut triggered");
-            onPlayPause();
-          });
+        // Check for keydown events
+        switch (event.key) {
+          case " ":
+            if (onPlayPause) {
+              event.preventDefault();
+              info("Play/Pause shortcut triggered");
+              try {
+                onPlayPause();
+                info("Play/Pause action completed");
+              } catch (err: any) {
+                error(`Error in play/pause: ${err.message}`);
+              }
+            } else {
+              trace("No play/pause handler registered");
+            }
+            break;
 
-          // Register media keys if available
-          await register("MediaPlayPause", () => {
-            info("Media Play/Pause key triggered");
-            onPlayPause();
-          });
+          case "ArrowRight":
+            if (onNext) {
+              event.preventDefault();
+              info("Next track shortcut triggered");
+              try {
+                onNext();
+                info("Next track action completed");
+              } catch (err: any) {
+                error(`Error in next track: ${err.message}`);
+              }
+            } else {
+              trace("No next track handler registered");
+            }
+            break;
+
+          case "ArrowLeft":
+            if (onPrev) {
+              event.preventDefault();
+              info("Previous track shortcut triggered");
+              try {
+                onPrev();
+                info("Previous track action completed");
+              } catch (err: any) {
+                error(`Error in previous track: ${err.message}`);
+              }
+            } else {
+              trace("No previous track handler registered");
+            }
+            break;
+
+          case "ArrowUp":
+            if (onVolumeUp) {
+              event.preventDefault();
+              info("Volume up shortcut triggered");
+              try {
+                onVolumeUp();
+                info("Volume up action completed");
+              } catch (err: any) {
+                error(`Error in volume up: ${err.message}`);
+              }
+            } else {
+              trace("No volume up handler registered");
+            }
+            break;
+
+          case "ArrowDown":
+            if (onVolumeDown) {
+              event.preventDefault();
+              info("Volume down shortcut triggered");
+              try {
+                onVolumeDown();
+                info("Volume down action completed");
+              } catch (err: any) {
+                error(`Error in volume down: ${err.message}`);
+              }
+            } else {
+              trace("No volume down handler registered");
+            }
+            break;
+
+          case "m":
+          case "M":
+            if (event.ctrlKey && onMute) {
+              event.preventDefault();
+              info("Mute shortcut triggered");
+              try {
+                onMute();
+                info("Mute action completed");
+              } catch (err: any) {
+                error(`Error in mute: ${err.message}`);
+              }
+            } else if (event.ctrlKey) {
+              trace("Ctrl+M pressed but no mute handler registered");
+            }
+            break;
+
+          case "s":
+          case "S":
+            if (event.ctrlKey && onShuffle) {
+              event.preventDefault();
+              info("Shuffle shortcut triggered");
+              try {
+                onShuffle();
+                info("Shuffle action completed");
+              } catch (err: any) {
+                error(`Error in shuffle: ${err.message}`);
+              }
+            } else if (event.ctrlKey) {
+              trace("Ctrl+S pressed but no shuffle handler registered");
+            }
+            break;
+
+          default:
+            // No shortcut
+            break;
         }
-
-        if (onNext) {
-          await register("ArrowRight", () => {
-            info("Next track shortcut triggered");
-            onNext();
-          });
-
-          // Register media keys if available
-          await register("MediaTrackNext", () => {
-            info("Media Next key triggered");
-            onNext();
-          });
-        }
-
-        if (onPrev) {
-          await register("ArrowLeft", () => {
-            info("Previous track shortcut triggered");
-            onPrev();
-          });
-
-          // Register media keys if available
-          await register("MediaTrackPrevious", () => {
-            info("Media Previous key triggered");
-            onPrev();
-          });
-        }
-
-        if (onShuffle) {
-          await register("CommandOrControl+S", () => {
-            info("Shuffle shortcut triggered");
-            onShuffle();
-          });
-        }
-
-        // volume control
-        if (onVolumeUp) {
-          await register("ArrowUp", () => {
-            info("Volume up shortcut triggered");
-            onVolumeUp();
-          });
-        }
-
-        if (onVolumeDown) {
-          await register("ArrowDown", () => {
-            info("Volume down shortcut triggered");
-            onVolumeDown();
-          });
-        }
-
-        if (onMute) {
-          await register("CommandOrControl+M", () => {
-            info("Mute shortcut triggered");
-            onMute();
-          });
-        }
-
-        info("Keyboard shortcuts registered successfully");
       } catch (err: any) {
-        error(`Failed to register keyboard shortcuts: ${err.message}`);
-        console.error("Error registering keyboard shortcuts:", err);
+        error(`Keyboard shortcut error: ${err.message}`);
       }
     };
 
-    registerShortcuts();
+    // add the event listener
+    trace("Adding keydown event listener");
+    window.addEventListener("keydown", handleKeyDown);
 
-    // cleanup function to unregister all shortcuts when component unmounts
+    // cleanup function
     return () => {
-      const cleanupShortcuts = async () => {
-        try {
-          if (onPlayPause) {
-            await unregister("Space");
-            await unregister("MediaPlayPause");
-          }
-          if (onNext) {
-            await unregister("ArrowRight");
-            await unregister("MediaTrackNext");
-          }
-          if (onPrev) {
-            await unregister("ArrowLeft");
-            await unregister("MediaTrackPrevious");
-          }
-          if (onShuffle) {
-            await unregister("CommandOrControl+S");
-          }
-          if (onVolumeUp) {
-            await unregister("ArrowUp");
-          }
-          if (onVolumeDown) {
-            await unregister("ArrowDown");
-          }
-          if (onMute) {
-            await unregister("CommandOrControl+M");
-          }
-
-          info("Keyboard shortcuts unregistered successfully");
-        } catch (err: any) {
-          error(`Failed to unregister keyboard shortcuts: ${err.message}`);
-          console.error("Error unregistering keyboard shortcuts:", err);
-        }
-      };
-
-      cleanupShortcuts();
+      trace("Removing keydown event listener");
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onPlayPause, onNext, onPrev, onShuffle, onVolumeUp, onVolumeDown, onMute]);
+  }, [
+    onPlayPause,
+    onNext,
+    onPrev,
+    onShuffle,
+    onVolumeUp,
+    onVolumeDown,
+    onMute,
+  ]);
 }
