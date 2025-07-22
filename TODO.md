@@ -1,5 +1,5 @@
 1. ✅Improve speed of rendering (frontend)
-    The backend is really fast at scanning folder but Rendering everything at once makes the process very slow. Fix that by using offloader like react-window 
+    The backend is really fast at scanning folder but Rendering everything at once makes the process very slow. Fix that by using offloader like react-window
 
 2. Design
     Update the playerbar and add a cool header with search option
@@ -10,9 +10,10 @@
 
 3. ✅ Keyboard shortcuts
     Implemet keeb shorcuts like CTRL + O and FN shortcuts for music control. (tauri docs - https://v2.tauri.app/plugin/global-shortcut/)
+    note, reimplement the pause feature by importing the pause const from useAudioPlayer.ts. good night
 
 4. ✅ Add file based logging.
 5. Update the settings page to be a popup rather than a route to achieve One page app feel
 5. ✅ Integrate Playlist syncing from spotify using spotdl
 6. Add android support
-    Fix CSS and add support for 
+    Fix CSS and add support for
