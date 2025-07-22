@@ -1,9 +1,24 @@
-import React, { RefObject } from "react";
-import { SkipBack, SkipForward, Play, Pause, Shuffle } from "lucide-react";
+import React, { RefObject, useState, useEffect } from "react";
+import {
+  SkipBack,
+  SkipForward,
+  Play,
+  Pause,
+  Shuffle,
+  Volume2,
+  Volume1,
+  VolumeX,
+  Volume,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+// 
 type Props = {
-  track: { cover_data_url?: string; title?: string; name: string; artist?: string; };
+  track: {
+    cover_data_url?: string;
+    title?: string;
+    name: string;
+    artist?: string;
+  };
   isPlaying: boolean;
   onShuffle(): void;
   onPrev(): void;
@@ -13,18 +28,88 @@ type Props = {
   duration: number;
   onSeek(time: number): void;
   audioRef: RefObject<HTMLAudioElement | null>;
+  onVolumeUp?(): void;
+  onVolumeDown?(): void;
+  onToggleMute?(): void;
 };
 
 function formatTime(sec: number): string {
-  const m = Math.floor(sec / 60).toString().padStart(2, "0");
-  const s = Math.floor(sec % 60).toString().padStart(2, "0");
+  const m = Math.floor(sec / 60)
+    .toString()
+    .padStart(2, "0");
+  const s = Math.floor(sec % 60)
+    .toString()
+    .padStart(2, "0");
   return `${m}:${s}`;
 }
 
 export default function PlayerBar({
-  track, isPlaying, onPrev, onTogglePlay, onNext,
-  currentTime, duration, onSeek, audioRef, onShuffle
+  track,
+  isPlaying,
+  onPrev,
+  onTogglePlay,
+  onNext,
+  currentTime,
+  duration,
+  onSeek,
+  audioRef,
+  onShuffle,
+  onVolumeUp,
+  onVolumeDown,
+  onToggleMute,
 }: Props) {
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  // Update volume state whenever the audio element's volume changes
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const updateVolumeState = () => {
+      setVolume(audio.volume);
+      setIsMuted(audio.muted);
+    };
+
+    // initial state
+    updateVolumeState();
+
+    audio.addEventListener("volumechange", updateVolumeState);
+
+    return () => {
+      audio.removeEventListener("volumechange", updateVolumeState);
+    };
+  }, [audioRef]);
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVolume = parseFloat(e.target.value);
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = newVolume;
+      audio.muted = newVolume === 0;
+      setVolume(newVolume);
+      setIsMuted(newVolume === 0);
+    }
+  };
+
+  const handleToggleMute = () => {
+    if (onToggleMute) {
+      onToggleMute();
+    } else {
+      const audio = audioRef.current;
+      if (audio) {
+        audio.muted = !audio.muted;
+        setIsMuted(!isMuted);
+      }
+    }
+  };
+
+  const getVolumeIcon = () => {
+    if (isMuted || volume === 0) return <VolumeX />;
+    if (volume < 0.3) return <Volume />;
+    if (volume < 0.7) return <Volume1 />;
+    return <Volume2 />;
+  };
+
   return (
     <footer className="p-4 h-auto border-b border-neutral-800 flex justify-between bg-black/60 backdrop-blur-xl w-5xl rounded-xl self-center fixed bottom-10 z-20">
       <div className="flex items-center justify-between gap-4 mr-5">
@@ -50,9 +135,13 @@ export default function PlayerBar({
         </div>
       </div>
 
-
       <div className="flex items-center gap-4">
-        <Button size="icon" variant="ghost" onClick={onShuffle} disabled={!isPlaying}>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onShuffle}
+          disabled={!isPlaying}
+        >
           <Shuffle />
         </Button>
         <Button size="icon" variant="ghost" onClick={onPrev}>
@@ -80,6 +169,21 @@ export default function PlayerBar({
           <div className="text-xs text-right font-mono">
             {formatTime(currentTime)} / {formatTime(duration)}
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          <Button size="icon" variant="ghost" onClick={handleToggleMute}>
+            {getVolumeIcon()}
+          </Button>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.01}
+            value={volume}
+            onChange={handleVolumeChange}
+            className="w-24"
+          />
         </div>
       </div>
       <audio ref={audioRef} onEnded={onNext} className="hidden" />

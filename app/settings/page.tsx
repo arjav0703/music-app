@@ -1,54 +1,80 @@
-"use client"
+"use client";
 
-import { FormEvent, useEffect, useState } from "react"
-import { FolderOpen, Settings } from "lucide-react"
-import { Store, load } from "@tauri-apps/plugin-store"
-import { Button } from "@/components/ui/button"
-import { useAudioPlayer } from "@/hooks/useAudioPlayer"
-import TextScramble from "@/components/Scrambletext"
-import { Input } from "@/components/ui/input"
-import { invoke } from "@tauri-apps/api/core"
-import { info } from "@tauri-apps/plugin-log"
-import { message } from '@tauri-apps/plugin-dialog';
+import { FormEvent, useEffect, useState } from "react";
+import { FolderOpen, Settings } from "lucide-react";
+import { Store, load } from "@tauri-apps/plugin-store";
+import { Button } from "@/components/ui/button";
+import { useAudioPlayer } from "@/hooks/useAudioPlayer";
+import TextScramble from "@/components/Scrambletext";
+import { Input } from "@/components/ui/input";
+import { invoke } from "@tauri-apps/api/core";
+import { info } from "@tauri-apps/plugin-log";
+import { message } from "@tauri-apps/plugin-dialog";
+import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function SettingsPage() {
-  const { pickAndScanFolder } = useAudioPlayer()
-  const [defaultDir, setDefaultDir] = useState<string>("")
-  const [spotifyUrl, setSpotifyUrl] = useState<string>("")
-  const [status, setStatus] = useState<"idle" | "saving" | "done">("idle")
+  const {
+    pickAndScanFolder,
+    play,
+    pause,
+    isPlaying,
+    next,
+    prev,
+    shuffle,
+    volumeUp,
+    volumeDown,
+    toggleMute,
+  } = useAudioPlayer();
+  const [defaultDir, setDefaultDir] = useState<string>("");
+  const [spotifyUrl, setSpotifyUrl] = useState<string>("");
+  const [status, setStatus] = useState<"idle" | "saving" | "done">("idle");
+
+  // Register keyboard shortcuts
+  useKeyboardShortcuts({
+    onPlayPause: isPlaying ? pause : play,
+    onNext: next,
+    onPrev: prev,
+    onShuffle: shuffle,
+    onVolumeUp: volumeUp,
+    onVolumeDown: volumeDown,
+    onMute: toggleMute,
+  });
 
   useEffect(() => {
     (async () => {
-      const store: Store = await load("settings.json")
+      const store: Store = await load("settings.json");
 
-      const dir = await store.get("default_dir")
+      const dir = await store.get("default_dir");
       if (typeof dir === "string") {
-        setDefaultDir(dir)
+        setDefaultDir(dir);
       }
 
-      const savedUrl = await store.get("spotify_url")
+      const savedUrl = await store.get("spotify_url");
       if (typeof savedUrl === "string") {
-        setSpotifyUrl(savedUrl)
+        setSpotifyUrl(savedUrl);
       }
-    })()
-  }, [])
+    })();
+  }, []);
 
   const handleSpotifySubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    setStatus("saving")
+    e.preventDefault();
+    setStatus("saving");
 
-    const store: Store = await load("settings.json")
-    await store.set("spotify_url", spotifyUrl)
-    await store.save()
-    info("Spotify URL saved")
+    const store: Store = await load("settings.json");
+    await store.set("spotify_url", spotifyUrl);
+    await store.save();
+    info("Spotify URL saved");
 
-    setStatus("done")
-    setTimeout(() => setStatus("idle"), 2000)
-  }
+    setStatus("done");
+    setTimeout(() => setStatus("idle"), 2000);
+  };
 
   const handleDownloadClick = async () => {
     try {
-      const spotdlExists: boolean = await invoke<boolean>("check_spotdl_exists");
+      const spotdlExists: boolean = await invoke<boolean>(
+        "check_spotdl_exists",
+      );
 
       if (!spotdlExists) {
         info("frontend - SpotDL is not installed. Please install it first.");
@@ -65,7 +91,6 @@ export default function SettingsPage() {
       console.error("Error starting download:", error);
     }
   };
-
 
   return (
     <div className="bg-black min-h-screen text-white px-6 py-10">
@@ -98,7 +123,10 @@ export default function SettingsPage() {
 
         <section className="bg-[#121212] rounded-lg p-6 shadow-md space-y-4 border border-neutral-800">
           <h2 className="text-lg font-medium mb-2">Spotify Playlist URL</h2>
-          <form onSubmit={handleSpotifySubmit} className="flex flex-col sm:flex-row gap-4">
+          <form
+            onSubmit={handleSpotifySubmit}
+            className="flex flex-col sm:flex-row gap-4"
+          >
             <Input
               type="text"
               placeholder="Enter your playlist URL"
@@ -121,6 +149,7 @@ export default function SettingsPage() {
           </Button>
         </section>
       </main>
+      <KeyboardShortcutsHelp />
     </div>
-  )
+  );
 }

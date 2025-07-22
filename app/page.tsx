@@ -5,15 +5,17 @@ import TrackGrid from "@/components/TrackGrid";
 import PlayerBar from "@/components/PlayerBar";
 // import { formatTime } from "../utils/formatTime";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 import TopBar from "@/components/TopBar";
+import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
 import { appDataDir } from "@tauri-apps/api/path";
 import { invoke } from "@tauri-apps/api/core";
 import {
   isPermissionGranted,
   requestPermission,
   sendNotification,
-} from '@tauri-apps/plugin-notification';
-import { info, error } from '@tauri-apps/plugin-log';
+} from "@tauri-apps/plugin-notification";
+import { info, error } from "@tauri-apps/plugin-log";
 
 export default function Home() {
   const {
@@ -32,6 +34,9 @@ export default function Home() {
     next,
     prev,
     seek,
+    volumeUp,
+    volumeDown,
+    toggleMute,
   } = useAudioPlayer();
 
   // DO NOT TOUCH!! (used to send data dir to backend)
@@ -58,10 +63,9 @@ export default function Home() {
         //   permissionGranted = permission === 'granted';
         // }
         // if (permissionGranted) {
-        sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
+        sendNotification({ title: "Tauri", body: "Tauri is awesome!" });
         info("Notification sent successfully");
         // }
-
       } catch (err: any) {
         error(`Notification error: ${err.message}`);
       }
@@ -69,6 +73,17 @@ export default function Home() {
 
     InvokeNotification();
   }, []);
+
+  // Register keyboard shortcuts
+  useKeyboardShortcuts({
+    onPlayPause: isPlaying ? pause : play,
+    onNext: next,
+    onPrev: prev,
+    onShuffle: shuffle,
+    onVolumeUp: volumeUp,
+    onVolumeDown: volumeDown,
+    onMute: toggleMute,
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const filteredPlaylist = playlist.filter(
@@ -111,8 +126,12 @@ export default function Home() {
           duration={duration}
           onSeek={seek}
           audioRef={audioRef}
+          onVolumeUp={volumeUp}
+          onVolumeDown={volumeDown}
+          onToggleMute={toggleMute}
         />
       )}
+      <KeyboardShortcutsHelp />
     </div>
   );
 }

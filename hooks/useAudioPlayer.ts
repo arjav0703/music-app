@@ -14,22 +14,23 @@ export function useAudioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [volume, setVolume] = useState(1);
+  const [isMuted, setIsMuted] = useState(false);
+  const previousVolume = useRef(1);
 
   const { persist } = usePlaylistStore();
-
   const LoadDefaultDir = useCallback(async () => {
     const store: Store = await load("settings.json");
     const dir = await store.get("default_dir");
     if (typeof dir === "string") {
       await scanAndSetPlaylist(dir, 0);
     }
-  }, [persist])
+  }, [persist]);
 
   // Do not touch, auto load on start
   useEffect(() => {
     LoadDefaultDir();
   }, [LoadDefaultDir]);
-
 
   const scanAndSetPlaylist = useCallback(
     async (path: string, startIndex: number) => {
@@ -47,7 +48,7 @@ export function useAudioPlayer() {
       setCurrent(startIndex);
       persist(tracks, startIndex);
     },
-    [persist]
+    [persist],
   );
 
   const pickAndScanFolder = useCallback(async () => {
@@ -62,8 +63,7 @@ export function useAudioPlayer() {
       await store.save();
 
       await scanAndSetPlaylist(selected, 0);
-    } catch (e) {
-    }
+    } catch (e) {}
   }, [persist]);
 
   // play a specific track (loads URL if needed)
@@ -80,7 +80,7 @@ export function useAudioPlayer() {
       setIsPlaying(true);
       persist(playlist, index);
     },
-    [playlist, persist]
+    [playlist, persist],
   );
 
   // controls
@@ -91,7 +91,7 @@ export function useAudioPlayer() {
     setCurrent(0);
     setIsPlaying(true);
     persist(shuffled, 0);
-  }
+  };
 
   const play = () => {
     audioRef.current?.play();
@@ -118,6 +118,51 @@ export function useAudioPlayer() {
   const seek = (time: number) => {
     if (audioRef.current) audioRef.current.currentTime = time;
     setCurrentTime(time);
+  };
+
+  const volumeUp = () => {
+    if (audioRef.current) {
+      const newVolume = Math.min(1, volume + 0.1);
+      audioRef.current.volume = newVolume;
+      setVolume(newVolume);
+      if (isMuted) {
+        setIsMuted(false);
+      }
+    }
+  };
+
+  const volumeDown = () => {
+    if (audioRef.current) {
+      const newVolume = Math.max(0, volume - 0.1);
+      audioRef.current.volume = newVolume;
+      setVolume(newVolume);
+    }
+  };
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.volume = previousVolume.current;
+        setVolume(previousVolume.current);
+      } else {
+        previousVolume.current = volume;
+        audioRef.current.volume = 0;
+        setVolume(0);
+      }
+      setIsMuted(!isMuted);
+    }
+  };
+
+  const setAudioVolume = (newVolume: number) => {
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+      setVolume(newVolume);
+      if (newVolume > 0 && isMuted) {
+        setIsMuted(false);
+      } else if (newVolume === 0 && !isMuted) {
+        setIsMuted(true);
+      }
+    }
   };
 
   // sync audio element when track/current/playing changes
@@ -152,11 +197,14 @@ export function useAudioPlayer() {
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", onMeta);
 
+    // Set volume when audio element is loaded
+    audio.volume = isMuted ? 0 : volume;
+
     return () => {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("loadedmetadata", onMeta);
     };
-  }, [current, playlist, isPlaying]);
+  }, [current, playlist, isPlaying, volume, isMuted]);
 
   return {
     playlist,
@@ -164,6 +212,8 @@ export function useAudioPlayer() {
     isPlaying,
     currentTime,
     duration,
+    volume,
+    isMuted,
     audioRef,
     pickAndScanFolder,
     LoadDefaultDir,
@@ -174,6 +224,9 @@ export function useAudioPlayer() {
     next,
     prev,
     seek,
+    volumeUp,
+    volumeDown,
+    toggleMute,
+    setVolume: setAudioVolume,
   };
 }
-
