@@ -57,7 +57,7 @@ export default function PlayerBar({
 }: Props) {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  // Update volume state whenever the audio element's volume changes
+  // Update volume state whenever the audio element's volume changesa
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -179,7 +179,12 @@ export default function PlayerBar({
           />
         </div> */}
       </div>
-      <audio ref={audioRef} onEnded={onNext} className="hidden" />
+      <audio
+        ref={audioRef}
+        onEnded={onNext}
+        className="hidden"
+        preload="auto"
+      />
     </footer>
   );
 }

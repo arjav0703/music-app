@@ -1,14 +1,9 @@
-import {
-  Dispatch,
-  RefObject,
-  SetStateAction,
-  useEffect,
-  useState,
-} from "react";
+import { RefObject, useEffect } from "react";
 import { info, error, trace } from "@tauri-apps/plugin-log";
 
 type ShortcutCallbacks = {
-  onPlayPause?: () => void;
+  onPlay?: () => void;
+  onPause?: () => void;
   onNext?: () => void;
   onPrev?: () => void;
   onShuffle?: () => void;
@@ -20,6 +15,8 @@ type ShortcutCallbacks = {
 };
 
 export function useLocalKeyboardShortcuts({
+  onPlay,
+  onPause,
   onNext,
   onPrev,
   onShuffle,
@@ -29,16 +26,15 @@ export function useLocalKeyboardShortcuts({
   isPlaying,
   audioRef,
 }: ShortcutCallbacks) {
-  // Don't need to create a new state since we're using the prop directly
   useEffect(() => {
-    info("Setting up keyboard shortcuts");
+    trace("Setting up keyboard shortcuts");
 
     const handleKeyDown = (event: KeyboardEvent) => {
       trace(
         `Key pressed: ${event.key}, ctrl: ${event.ctrlKey}, target: ${event.target}`,
       );
 
-      // Ignore key presses if they occur in an input or textareaa
+      // Ignore key presses if they occur in an input or textarea
       if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement
@@ -54,11 +50,11 @@ export function useLocalKeyboardShortcuts({
             event.preventDefault();
             info("Play/pause shortcut triggered");
             try {
-              if (isPlaying) {
-                audioRef.current?.pause();
+              if (isPlaying && onPause) {
+                onPause();
                 info("Pause action completed");
-              } else {
-                audioRef.current?.play();
+              } else if (!isPlaying && onPlay) {
+                onPlay();
                 info("Play action completed");
               }
             } catch (err: any) {
@@ -177,6 +173,8 @@ export function useLocalKeyboardShortcuts({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
+    onPlay,
+    onPause,
     onNext,
     onPrev,
     onShuffle,
