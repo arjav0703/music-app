@@ -1,5 +1,5 @@
 1. ✅Improve speed of rendering (frontend)
-    The backend is really fast at scanning folder but Rendering everything at once makes the process very slow. Fix that by using offloader like react-window
+    The backend is really fast at scanning folder but Rendering everything at once makes the process very slow. Fix that by using offloader like react-window. Consider inproving the speed at which the app loads the songs.
 
 2. Design
     Update the playerbar and add a cool header with search option
