@@ -15,7 +15,7 @@ import {
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 import { info, error } from "@tauri-apps/plugin-log";
-// 
+//
 export default function Home() {
   const {
     playlist,
@@ -73,9 +73,11 @@ export default function Home() {
     InvokeNotification();
   }, []);
 
-  // Register keyboard shortcuts
+  // Register keyboard shortcut
   useLocalKeyboardShortcuts({
     audioRef,
+    onPlay: play,
+    onPause: pause,
     onNext: next,
     onPrev: prev,
     onShuffle: shuffle,
