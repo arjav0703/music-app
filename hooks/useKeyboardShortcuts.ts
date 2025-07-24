@@ -1,10 +1,15 @@
-import { RefObject, useEffect } from "react";
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import { info, error, trace } from "@tauri-apps/plugin-log";
 import { platform } from '@tauri-apps/plugin-os';
 
 type ShortcutCallbacks = {
-  onPlay?: () => void;
-  onPause?: () => void;
+  onPlayPause?: () => void;
   onNext?: () => void;
   onPrev?: () => void;
   onShuffle?: () => void;
@@ -16,8 +21,6 @@ type ShortcutCallbacks = {
 };
 
 export function useLocalKeyboardShortcuts({
-  onPlay,
-  onPause,
   onNext,
   onPrev,
   onShuffle,
@@ -27,16 +30,21 @@ export function useLocalKeyboardShortcuts({
   isPlaying,
   audioRef,
 }: ShortcutCallbacks) {
+  // Don't need to create a new state since we're using the prop directly
   useEffect(() => {
+<<<<<<< HEAD
 
     trace("Setting up keyboard shortcuts");
+=======
+    info("Setting up keyboard shortcuts");
+>>>>>>> parent of 50e9327 (fix that stupid pause feature)
 
     const handleKeyDown = (event: KeyboardEvent) => {
       trace(
         `Key pressed: ${event.key}, ctrl: ${event.ctrlKey}, target: ${event.target}`,
       );
 
-      // Ignore key presses if they occur in an input or textarea
+      // Ignore key presses if they occur in an input or textareaa
       if (
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement
@@ -52,11 +60,11 @@ export function useLocalKeyboardShortcuts({
             event.preventDefault();
             info("Play/pause shortcut triggered");
             try {
-              if (isPlaying && onPause) {
-                onPause();
+              if (isPlaying) {
+                audioRef.current?.pause();
                 info("Pause action completed");
-              } else if (!isPlaying && onPlay) {
-                onPlay();
+              } else {
+                audioRef.current?.play();
                 info("Play action completed");
               }
             } catch (err: any) {
@@ -175,8 +183,6 @@ export function useLocalKeyboardShortcuts({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [
-    onPlay,
-    onPause,
     onNext,
     onPrev,
     onShuffle,

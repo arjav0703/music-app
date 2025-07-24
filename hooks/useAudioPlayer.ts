@@ -28,7 +28,7 @@ export function useAudioPlayer() {
     }
   }, [persist]);
 
-  // Do not touch, auto load on starta
+  // Do not touch, auto load on start
   useEffect(() => {
     LoadDefaultDir();
   }, [LoadDefaultDir]);
@@ -216,7 +216,7 @@ export function useAudioPlayer() {
     }
   };
 
-  // Effect for loading the current track (only runs when track changes)
+  // sync audio element when track/current/playing changes
   useEffect(() => {
     const audio = audioRef.current;
     const t = playlist[current];
@@ -230,13 +230,8 @@ export function useAudioPlayer() {
         copy[current] = { ...t, url };
         setPlaylist(copy);
       }
-
-      // Only set src and load if the URL has changed
-      if (audio.src !== url) {
-        audio.src = url!;
-        audio.load();
-      }
-
+      audio.src = url!;
+      audio.load();
       if (isPlaying) {
         try {
           await audio.play();
@@ -253,31 +248,14 @@ export function useAudioPlayer() {
     audio.addEventListener("timeupdate", onTime);
     audio.addEventListener("loadedmetadata", onMeta);
 
+    // Set volume when audio element is loaded
+    audio.volume = isMuted ? 0 : volume;
+
     return () => {
       audio.removeEventListener("timeupdate", onTime);
       audio.removeEventListener("loadedmetadata", onMeta);
     };
-  }, [current, playlist]);
-
-  // play/pause
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    if (isPlaying) {
-      audio.play().catch(() => warn("Failed to play audio"));
-    } else {
-      audio.pause();
-    }
-  }, [isPlaying]);
-
-  // volume change
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    audio.volume = isMuted ? 0 : volume;
-  }, [volume, isMuted]);
+  }, [current, playlist, isPlaying, volume, isMuted]);
 
   return {
     playlist,

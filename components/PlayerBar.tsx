@@ -219,12 +219,7 @@ export default function PlayerBar({
           />
         </div> */}
       </div>
-      <audio
-        ref={audioRef}
-        onEnded={onNext}
-        className="hidden"
-        preload="auto"
-      />
+      <audio ref={audioRef} onEnded={onNext} className="hidden" />
     </footer>
   );
 }
