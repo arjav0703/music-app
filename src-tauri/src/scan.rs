@@ -4,10 +4,8 @@ use lofty::tag::Accessor;
 use rayon::prelude::*;
 use serde::Serialize;
 use std::time::Instant;
-use tauri::{command, AppHandle, Runtime};
+use tauri::command;
 use walkdir::WalkDir;
-
-use crate::android_handler;
 
 #[derive(Serialize)]
 pub struct TrackMetadata {
@@ -20,35 +18,11 @@ pub struct TrackMetadata {
 }
 
 #[command]
-pub fn scan_folder<R: Runtime>(path: String, app_handle: AppHandle<R>) -> Vec<TrackMetadata> {
+pub fn scan_folder(path: String) -> Vec<TrackMetadata> {
     const EXTENSIONS: &[&str] = &["mp3", "flac", "wav", "ogg", "m4a"];
 
     log::info!("[{path}] Starting folder scan......");
     let start = Instant::now();
-
-    // Check if this is an Android content URI
-    if android_handler::is_content_uri(&path) {
-        #[cfg(target_os = "android")]
-        {
-            log::info!("Scanning Android content URI: {}", path);
-            // For Android content URIs, we need a simpler approach
-            // Just return a placeholder track for now to show it's working
-            return vec![TrackMetadata {
-                name: "Content URI Track".to_string(),
-                path: path.clone(),
-                title: Some("Android Content URI".to_string()),
-                artist: Some("Testing".to_string()),
-                album: Some("Android Demo".to_string()),
-                cover_data_url: None,
-            }];
-        }
-
-        #[cfg(not(target_os = "android"))]
-        {
-            log::error!("Android content URI on non-Android platform");
-            return Vec::new();
-        }
-    }
 
     let tracks: Vec<TrackMetadata> = WalkDir::new(&path)
         .max_depth(2)
@@ -73,6 +47,7 @@ pub fn scan_folder<R: Runtime>(path: String, app_handle: AppHandle<R>) -> Vec<Tr
                 .unwrap_or_default();
 
             let full_path = p.to_string_lossy().into_owned();
+
             // Read the tags + picture
             let (title, artist, album, cover_data_url) = Probe::open(p)
                 .and_then(|prb| prb.read())
@@ -90,10 +65,7 @@ pub fn scan_folder<R: Runtime>(path: String, app_handle: AppHandle<R>) -> Vec<Tr
                             .unwrap_or_else(||                // String
                                 "application/octet-stream".into());
 
-                        let b64 = base64::Engine::encode(
-                            &base64::engine::general_purpose::STANDARD,
-                            pic.data(),
-                        );
+                        let b64 = base64::encode(pic.data());
                         format!("data:{mime};base64,{b64}")
                     });
 
@@ -121,31 +93,4 @@ pub fn scan_folder<R: Runtime>(path: String, app_handle: AppHandle<R>) -> Vec<Tr
     );
 
     tracks
-}
-
-// Simple implementation for Android content URI handling
-// We'll improve this in the future with proper ContentResolver access
-#[cfg(target_os = "android")]
-fn create_dummy_tracks_for_android(uri: &str) -> Vec<TrackMetadata> {
-    log::info!("Creating test tracks for Android content URI: {}", uri);
-
-    // Just create a couple of test tracks to show the functionality works
-    vec![
-        TrackMetadata {
-            name: "Test Track 1.mp3".to_string(),
-            path: format!("{}/track1.mp3", uri),
-            title: Some("Test Track 1".to_string()),
-            artist: Some("Test Artist".to_string()),
-            album: Some("Test Album".to_string()),
-            cover_data_url: None,
-        },
-        TrackMetadata {
-            name: "Test Track 2.mp3".to_string(),
-            path: format!("{}/track2.mp3", uri),
-            title: Some("Test Track 2".to_string()),
-            artist: Some("Test Artist".to_string()),
-            album: Some("Test Album".to_string()),
-            cover_data_url: None,
-        },
-    ]
 }

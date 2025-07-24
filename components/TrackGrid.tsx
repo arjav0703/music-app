@@ -15,9 +15,13 @@ type Props = {
 
 export default function TrackGrid({ tracks, onSelect }: Props) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-6">
       {tracks.map((track, index) => (
-        <InView key={index} triggerOnce rootMargin="300px">
+        <InView
+          key={index}
+          triggerOnce
+          rootMargin="300px"
+        >
           {({ inView, ref }) => (
             <div ref={ref}>
               {inView ? (
@@ -29,7 +33,7 @@ export default function TrackGrid({ tracks, onSelect }: Props) {
                 />
               ) : (
                 <div
-                  className="w-full bg-gray-800 animate-pulse rounded-md"
+                  className="w-full bg-gray-100 animate-pulse"
                   style={{ aspectRatio: "1 / 1" }}
                 />
               )}

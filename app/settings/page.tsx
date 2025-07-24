@@ -80,44 +80,39 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="bg-black min-h-screen text-white px-4 sm:px-6 py-6 sm:py-10">
-      <main className="max-w-4xl mx-auto space-y-8 sm:space-y-12">
+    <div className="bg-black min-h-screen text-white px-6 py-10">
+      <main className="max-w-4xl mx-auto space-y-12">
         {/* Header */}
 
-        <div className="flex items-center space-x-3 sm:space-x-4">
-          <Settings size={40} className="text-white sm:block" />
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">
+        <div className="flex items-center space-x-4">
+          <Settings size={50} className="text-white" />
+          <h1 className="text-5xl font-extrabold tracking-tight">
             <TextScramble text="Settings" color="#fff" />
           </h1>
         </div>
 
-        <section className="bg-[#121212] rounded-lg p-4 sm:p-6 shadow-md space-y-3 sm:space-y-4 border border-neutral-800">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-            <div className="text-base sm:text-lg font-medium flex flex-wrap items-center space-x-2">
-              <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+        <section className="bg-[#121212] rounded-lg p-6 shadow-md space-y-4 border border-neutral-800">
+          <div className="flex items-center justify-between">
+            <div className="text-lg font-medium flex items-center space-x-2">
+              <FolderOpen className="w-5 h-5" />
               <span>Default Folder:</span>
-              <span className="text-sm text-neutral-400 truncate max-w-full sm:max-w-[300px] break-all">
+              <span className="text-sm text-neutral-400 truncate max-w-[300px]">
                 {defaultDir || "Not set yet"}
               </span>
             </div>
 
-            <Button
-              onClick={pickAndScanFolder}
-              className="w-full sm:w-auto sm:ml-4"
-            >
+            <Button onClick={pickAndScanFolder} className="ml-4">
               <FolderOpen className="w-4 h-4 mr-2" />
               Scan Folder
             </Button>
           </div>
         </section>
 
-        <section className="bg-[#121212] rounded-lg p-4 sm:p-6 shadow-md space-y-3 sm:space-y-4 border border-neutral-800">
-          <h2 className="text-base sm:text-lg font-medium mb-2">
-            Spotify Playlist URL
-          </h2>
+        <section className="bg-[#121212] rounded-lg p-6 shadow-md space-y-4 border border-neutral-800">
+          <h2 className="text-lg font-medium mb-2">Spotify Playlist URL</h2>
           <form
             onSubmit={handleSpotifySubmit}
-            className="flex flex-col gap-3 sm:gap-4"
+            className="flex flex-col sm:flex-row gap-4"
           >
             <Input
               type="text"
@@ -126,11 +121,7 @@ export default function SettingsPage() {
               onChange={(e) => setSpotifyUrl(e.currentTarget.value)}
               className="flex-1 bg-neutral-900 border border-neutral-700"
             />
-            <Button
-              type="submit"
-              disabled={status === "saving"}
-              className="w-full sm:w-auto"
-            >
+            <Button type="submit" disabled={status === "saving"}>
               {status === "saving" ? "Saving…" : "Save URL"}
             </Button>
           </form>
@@ -139,7 +130,7 @@ export default function SettingsPage() {
           )}
         </section>
 
-        <section className="bg-[#121212] rounded-lg p-4 sm:p-6 shadow-md border border-neutral-800">
+        <section className="bg-[#121212] rounded-lg p-6 shadow-md border border-neutral-800">
           <Button onClick={handleDownloadClick} className="w-full sm:w-auto">
             Start Download
           </Button>

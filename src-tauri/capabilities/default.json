@@ -9,7 +9,8 @@
     "dialog:default",
     "fs:default",
     "store:default",
-    "log:allow-log",
-    "log:default"
+    "global-shortcut:allow-is-registered",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister"
   ]
 }

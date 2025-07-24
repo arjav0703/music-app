@@ -2,7 +2,7 @@
 //     if check_spotdl_binary_exists(&data_dir) {
 //         info!("[spotdl] spotdl binary already exists at: {data_dir}");
 //         return;
-//     }a
+//     }
 //
 //     info!("[spotdl] Starting spotdl binary download...");
 //
@@ -126,7 +126,6 @@ use log::info;
 use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 #[tauri::command]
 pub fn check_spotdl_exists() -> bool {
     use which::which;
@@ -143,7 +142,6 @@ pub fn check_spotdl_exists() -> bool {
     }
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn get_settings(
     app_handle: &AppHandle,
 ) -> Result<(String, String, String), Box<dyn std::error::Error>> {
@@ -174,7 +172,6 @@ fn get_settings(
     Ok((spotify_url.to_string(), data_dir, default_dir))
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 #[tauri::command]
 pub fn download_playlist(app_handle: AppHandle) {
     info!("[spotdl] Starting playlist download...");
@@ -192,9 +189,7 @@ pub fn download_playlist(app_handle: AppHandle) {
     });
 }
 
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 use std::env;
-#[cfg(not(any(target_os = "android", target_os = "ios")))]
 fn exec_spotdl(spotify_url: &str, _data_dir: &str, default_dir: &str) -> Result<(), String> {
     use std::process::{Command, Stdio};
 

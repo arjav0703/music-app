@@ -6,7 +6,6 @@ import {
   useState,
 } from "react";
 import { info, error, trace } from "@tauri-apps/plugin-log";
-import { platform } from '@tauri-apps/plugin-os';
 
 type ShortcutCallbacks = {
   onPlayPause?: () => void;
@@ -33,7 +32,10 @@ export function useLocalKeyboardShortcuts({
   // Don't need to create a new state since we're using the prop directly
   useEffect(() => {
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of 220f2d2 (WHAT THE ACTUAL FUCK IS HAPPENING)
     trace("Setting up keyboard shortcuts");
 =======
     info("Setting up keyboard shortcuts");

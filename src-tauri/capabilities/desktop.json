@@ -11,9 +11,7 @@
   "permissions": [
     "global-shortcut:default",
     "store:default",
-    "global-shortcut:allow-is-registered",
-    "global-shortcut:allow-register",
-    "global-shortcut:allow-unregister"
-
+    "log:allow-log",
+    "log:default"
   ]
 }
