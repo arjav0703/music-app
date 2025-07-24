@@ -1,5 +1,6 @@
 import { RefObject, useEffect } from "react";
 import { info, error, trace } from "@tauri-apps/plugin-log";
+import { platform } from '@tauri-apps/plugin-os';
 
 type ShortcutCallbacks = {
   onPlay?: () => void;
@@ -27,6 +28,7 @@ export function useLocalKeyboardShortcuts({
   audioRef,
 }: ShortcutCallbacks) {
   useEffect(() => {
+
     trace("Setting up keyboard shortcuts");
 
     const handleKeyDown = (event: KeyboardEvent) => {

@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { Track, ScannedTrack } from "@/components/types/track";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
+import { platform } from "@tauri-apps/plugin-os";
 import { filePathToBlobUrl } from "@/utils/filetoBlob";
 import { usePlaylistStore } from "./usePlaylistStore";
 import { error, info, warn } from "@tauri-apps/plugin-log";
@@ -53,9 +54,57 @@ export function useAudioPlayer() {
 
   const pickAndScanFolder = useCallback(async () => {
     try {
-      const selected = await open({ directory: true });
-      if (typeof selected !== "string") {
-        return;
+      const currentPlatform = await platform();
+      const isAndroid = currentPlatform == "android";
+      // alert(`isAndroid ${isAndroid}`);
+      let selected;
+
+      if (isAndroid) {
+        // Use Android's content URI approach
+        try {
+          selected = await invoke<string>("android_pick_folder");
+          if (!selected) {
+            return;
+          }
+
+          // If we get a pending URI, we need to listen for the actual result
+          if (selected === "android://pending-folder-selection") {
+            // Set up event listener for folder selection result
+            const unlisten = await (
+              await import("@tauri-apps/api/event")
+            ).listen("android-folder-selected", (event) => {
+              unlisten();
+              if (event.payload) {
+                const uri = event.payload as string;
+                if (uri && uri !== "android://cancelled") {
+                  // Save selected folder to settings
+                  (async () => {
+                    const store = await import("@tauri-apps/plugin-store");
+                    const settingsStore = await store.load("settings.json");
+                    await settingsStore.set("default_dir", uri);
+                    await settingsStore.save();
+
+                    // Scan the selected folder
+                    scanAndSetPlaylist(uri, 0).catch((e) => {
+                      warn("Error scanning folder:", e);
+                    });
+                  })();
+                }
+              }
+            });
+
+            // Return early as we'll handle the result in the event listener
+            return;
+          }
+        } catch (err) {
+          info("Error in Android folder selection:");
+          return;
+        }
+      } else {
+        selected = await open({ directory: true });
+        if (typeof selected !== "string") {
+          return;
+        }
       }
 
       const store: Store = await load("settings.json");
@@ -63,8 +112,10 @@ export function useAudioPlayer() {
       await store.save();
 
       await scanAndSetPlaylist(selected, 0);
-    } catch (e) {}
-  }, [persist]);
+    } catch (e) {
+      warn("Error picking folder:");
+    }
+  }, [persist, scanAndSetPlaylist]);
 
   // play a specific track (loads URL if needed)
   const playTrack = useCallback(

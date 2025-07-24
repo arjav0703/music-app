@@ -11,6 +11,7 @@ import {
   Volume,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { platform } from "@tauri-apps/plugin-os";
 //
 type Props = {
   track: {
@@ -57,7 +58,22 @@ export default function PlayerBar({
 }: Props) {
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  // Update volume state whenever the audio element's volume changesa
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  // Check if we're on Android
+  useEffect(() => {
+    const checkPlatform = async () => {
+      try {
+        const currentPlatform = await platform();
+        setIsAndroid(currentPlatform === "android");
+      } catch (error) {
+        console.error("Failed to detect platform:", error);
+      }
+    };
+    checkPlatform();
+  }, []);
+
+  // Update volume state whenever the audio element's volume changes
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -104,21 +120,23 @@ export default function PlayerBar({
   };
 
   return (
-    <footer className="p-4 h-auto border-b border-neutral-800 flex justify-between bg-black/60 backdrop-blur-xl w-5xl rounded-xl self-center fixed bottom-10 z-20">
-      <div className="flex items-center justify-between gap-4 mr-5">
-        <div className="flex items-center gap-3 min-w-0">
+    <footer className="p-2 sm:p-4 h-auto border-b border-neutral-800 flex flex-col sm:flex-row justify-between bg-black/60 backdrop-blur-xl w-full sm:w-5xl rounded-xl self-center fixed bottom-2 sm:bottom-10 z-20">
+      <div
+        className={`flex items-center justify-between gap-2 sm:gap-4 ${isAndroid ? "mb-2 sm:mb-0" : "mr-5"}`}
+      >
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           {track.cover_data_url ? (
             <img
               src={track.cover_data_url}
-              className="w-12 h-12 rounded-md object-cover"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-md object-cover"
             />
           ) : (
-            <div className="w-12 h-12 bg-neutral-700 rounded-md flex items-center justify-center text-xs">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-neutral-700 rounded-md flex items-center justify-center text-xs">
               No Art
             </div>
           )}
           <div className="truncate">
-            <div className="text-sm font-medium truncate">
+            <div className="text-xs sm:text-sm font-medium truncate">
               {track.title ?? track.name}
             </div>
             <div className="text-xs text-neutral-400 truncate">
@@ -128,28 +146,50 @@ export default function PlayerBar({
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onShuffle}
-          disabled={!isPlaying}
-        >
-          <Shuffle />
-        </Button>
-        <Button size="icon" variant="ghost" onClick={onPrev}>
-          <SkipBack />
-        </Button>
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onShuffle}
+            disabled={!isPlaying}
+            className={isAndroid ? "w-8 h-8 sm:w-9 sm:h-9" : ""}
+          >
+            <Shuffle className={isAndroid ? "w-4 h-4" : ""} />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onPrev}
+            className={isAndroid ? "w-8 h-8 sm:w-9 sm:h-9" : ""}
+          >
+            <SkipBack className={isAndroid ? "w-4 h-4" : ""} />
+          </Button>
 
-        <Button size="icon" variant="ghost" onClick={onTogglePlay}>
-          {isPlaying ? <Pause /> : <Play />}
-        </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onTogglePlay}
+            className={isAndroid ? "w-10 h-10 sm:w-12 sm:h-12" : ""}
+          >
+            {isPlaying ? (
+              <Pause className={isAndroid ? "w-5 h-5" : ""} />
+            ) : (
+              <Play className={isAndroid ? "w-5 h-5" : ""} />
+            )}
+          </Button>
 
-        <Button size="icon" variant="ghost" onClick={onNext}>
-          <SkipForward />
-        </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={onNext}
+            className={isAndroid ? "w-8 h-8 sm:w-9 sm:h-9" : ""}
+          >
+            <SkipForward className={isAndroid ? "w-4 h-4" : ""} />
+          </Button>
+        </div>
 
-        <div className="flex-1 px-4">
+        <div className="flex-1 w-full px-2 sm:px-4">
           <input
             type="range"
             min={0}
@@ -157,7 +197,7 @@ export default function PlayerBar({
             step={0.1}
             value={currentTime}
             onChange={(e) => onSeek(parseFloat(e.currentTarget.value))}
-            className="w-lg mx-auto"
+            className="w-full"
           />
           <div className="text-xs text-right font-mono">
             {formatTime(currentTime)} / {formatTime(duration)}

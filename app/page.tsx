@@ -105,7 +105,7 @@ export default function Home() {
         setSearchQuery={setSearchQuery}
       />
 
-      <ScrollArea className="flex-1 p-6 pb-24 z-10 mt-40">
+      <ScrollArea className="flex-1 p-3 sm:p-6 pb-24 z-10 mt-20 sm:mt-40">
         <TrackGrid
           tracks={filteredPlaylist}
           onSelect={(index) => {
