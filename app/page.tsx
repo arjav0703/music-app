@@ -17,7 +17,6 @@ import {
 import { info, error } from "@tauri-apps/plugin-log";
 //
 export default function Home() {
-  const [isAndroid, setisAndroid] = useState(false);
   const {
     playlist,
     current,
