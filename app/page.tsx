@@ -15,7 +15,6 @@ import {
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 import { info, error } from "@tauri-apps/plugin-log";
-import { platform } from "@tauri-apps/plugin-os";
 //
 export default function Home() {
   const [isAndroid, setisAndroid] = useState(false);
@@ -75,26 +74,20 @@ export default function Home() {
     InvokeNotification();
   }, []);
 
-  const currentPlatform = platform();
-  if (currentPlatform === "android") {
-    setisAndroid(true);
-  }
 
-  if (!isAndroid) {
-    // Register keyboard shortcut
-    useLocalKeyboardShortcuts({
-      audioRef,
-      onPlay: play,
-      onPause: pause,
-      onNext: next,
-      onPrev: prev,
-      onShuffle: shuffle,
-      onVolumeUp: volumeUp,
-      onVolumeDown: volumeDown,
-      onMute: toggleMute,
-      isPlaying: isPlaying,
-    });
-  }
+  // Register keyboard shortcut
+  useLocalKeyboardShortcuts({
+    audioRef,
+    onPlay: play,
+    onPause: pause,
+    onNext: next,
+    onPrev: prev,
+    onShuffle: shuffle,
+    onVolumeUp: volumeUp,
+    onVolumeDown: volumeDown,
+    onMute: toggleMute,
+    isPlaying: isPlaying,
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const filteredPlaylist = playlist.filter(
