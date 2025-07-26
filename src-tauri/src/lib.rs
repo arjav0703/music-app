@@ -5,6 +5,7 @@ use scan::scan_folder;
 mod spotdl;
 use spotdl::check_spotdl_exists;
 use spotdl::download_playlist;
+use std::env;
 use std::fs;
 use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
@@ -16,16 +17,48 @@ use tauri_plugin_store::StoreExt;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
-        .plugin(
-            tauri_plugin_log::Builder::new()
-                .target(tauri_plugin_log::Target::new(
-                    tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("logs".to_string()),
-                    },
-                ))
-                .level(log::LevelFilter::Info)
-                .build(),
-        )
+        .setup(|app| {
+            let log_level = match app.cli().matches() {
+                Ok(matches) => {
+                    if let Some(verbose_arg) = matches.args.get("verbose") {
+                        let is_verbose = verbose_arg.value.as_str() == Some("true");
+                        println!("[CLI] Verbose: {is_verbose}");
+                        if is_verbose {
+                            log::LevelFilter::Trace
+                        } else {
+                            log::LevelFilter::Info
+                        }
+                    } else {
+                        log::LevelFilter::Info
+                    }
+                }
+                Err(_) => log::LevelFilter::Info,
+            };
+
+            app.handle().plugin(
+                tauri_plugin_log::Builder::new()
+                    .targets([
+                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
+                            file_name: Some("logs".to_string()),
+                        }),
+                        tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                    ])
+                    .level(log_level)
+                    .build(),
+            )?;
+
+            Ok(())
+        })
+        // .plugin(
+        //     tauri_plugin_log::Builder::new()
+        //         .target(tauri_plugin_log::Target::new(
+        //             tauri_plugin_log::TargetKind::LogDir {
+        //                 file_name: Some("logs".to_string()),
+        //             },
+        //         ))
+        //         .level(log::LevelFilter::Info)
+        //         .build(),
+        // )
         .plugin(tauri_plugin_cli::init())
         .setup(|app| {
             match app.cli().matches() {
@@ -40,7 +73,7 @@ pub fn run() {
                         .get("verbose")
                         .expect("verbose argument not found")
                         .value;
-                    println!("Verbose mode: {}", is_verbose);
+                    println!("Verbose mode: {is_verbose}");
                 }
                 Err(_) => {}
             }
