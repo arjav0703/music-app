@@ -12,6 +12,7 @@
     "global-shortcut:default",
     "store:default",
     "log:allow-log",
-    "log:default"
+    "log:default",
+    "cli:default"
   ]
 }

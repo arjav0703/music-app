@@ -13,6 +13,7 @@
     "@radix-ui/react-scroll-area": "^1.2.9",
     "@radix-ui/react-slot": "^1.2.3",
     "@tauri-apps/api": "^2.6.0",
+    "@tauri-apps/plugin-cli": "^2.4.0",
     "@tauri-apps/plugin-dialog": "^2.3.0",
     "@tauri-apps/plugin-fs": "^2.4.0",
     "@tauri-apps/plugin-global-shortcut": "^2.3.0",

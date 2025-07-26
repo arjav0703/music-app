@@ -6,6 +6,7 @@ mod spotdl;
 use spotdl::check_spotdl_exists;
 use spotdl::download_playlist;
 use std::fs;
+use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
 //use serde_json::json;
 //use tauri::Wry;
@@ -25,6 +26,26 @@ pub fn run() {
                 .level(log::LevelFilter::Info)
                 .build(),
         )
+        .plugin(tauri_plugin_cli::init())
+        .setup(|app| {
+            match app.cli().matches() {
+                // `matches` here is a Struct with { args, subcommand }.
+                // `args` is `HashMap<String, ArgData>` where `ArgData` is a struct with { value, occurrences }.
+                // `subcommand` is `Option<Box<SubcommandMatches>>` where `SubcommandMatches` is a struct with { name, matches }.
+                Ok(matches) => {
+                    println!("{:?}", &matches);
+                    // let isVerbose = matches.args.get("verbose);
+                    let is_verbose = &matches
+                        .args
+                        .get("verbose")
+                        .expect("verbose argument not found")
+                        .value;
+                    println!("Verbose mode: {}", is_verbose);
+                }
+                Err(_) => {}
+            }
+            Ok(())
+        })
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())

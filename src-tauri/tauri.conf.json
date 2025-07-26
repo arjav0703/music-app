@@ -32,5 +32,17 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+      "cli": {
+        "description": "Musik CLI",
+
+        "args": [
+          {
+            "name": "verbose",
+            "short": "v"
+          }
+        ]
+  }
   }
 }
