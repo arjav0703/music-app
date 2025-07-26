@@ -1,5 +1,5 @@
 import { RefObject, useEffect } from "react";
-import { info, error, trace } from "@tauri-apps/plugin-log";
+import { info, error, debug } from "@tauri-apps/plugin-log";
 
 type ShortcutCallbacks = {
   onPlay?: () => void;
@@ -27,10 +27,10 @@ export function useLocalKeyboardShortcuts({
   audioRef,
 }: ShortcutCallbacks) {
   useEffect(() => {
-    trace("Setting up keyboard shortcuts");
+    debug("Setting up keyboard shortcuts");
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      trace(
+      debug(
         `Key pressed: ${event.key}, ctrl: ${event.ctrlKey}, target: ${event.target}`,
       );
 
@@ -39,7 +39,7 @@ export function useLocalKeyboardShortcuts({
         event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLTextAreaElement
       ) {
-        trace("Ignoring keypress in input/textarea");
+        debug("Ignoring keypress in input/textarea");
         return;
       }
 
@@ -73,7 +73,7 @@ export function useLocalKeyboardShortcuts({
                 error(`Error in next track: ${err.message}`);
               }
             } else {
-              trace("No next track handler registered");
+              debug("No next track handler registered");
             }
             break;
 
@@ -88,7 +88,7 @@ export function useLocalKeyboardShortcuts({
                 error(`Error in previous track: ${err.message}`);
               }
             } else {
-              trace("No previous track handler registered");
+              debug("No previous track handler registered");
             }
             break;
 
@@ -103,7 +103,7 @@ export function useLocalKeyboardShortcuts({
                 error(`Error in volume up: ${err.message}`);
               }
             } else {
-              trace("No volume up handler registered");
+              debug("No volume up handler registered");
             }
             break;
 
@@ -118,7 +118,7 @@ export function useLocalKeyboardShortcuts({
                 error(`Error in volume down: ${err.message}`);
               }
             } else {
-              trace("No volume down handler registered");
+              debug("No volume down handler registered");
             }
             break;
 
@@ -134,7 +134,7 @@ export function useLocalKeyboardShortcuts({
                 error(`Error in mute: ${err.message}`);
               }
             } else if (event.ctrlKey) {
-              trace("Ctrl+M pressed but no mute handler registered");
+              debug("Ctrl+M pressed but no mute handler registered");
             }
             break;
 
@@ -150,7 +150,7 @@ export function useLocalKeyboardShortcuts({
                 error(`Error in shuffle: ${err.message}`);
               }
             } else if (event.ctrlKey) {
-              trace("Ctrl+S pressed but no shuffle handler registered");
+              debug("Ctrl+S pressed but no shuffle handler registered");
             }
             break;
 
@@ -164,12 +164,12 @@ export function useLocalKeyboardShortcuts({
     };
 
     // add the event listener
-    trace("Adding keydown event listener");
+    debug("Adding keydown event listener");
     window.addEventListener("keydown", handleKeyDown);
 
     // cleanup function
     return () => {
-      trace("Removing keydown event listener");
+      debug("Removing keydown event listener");
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [

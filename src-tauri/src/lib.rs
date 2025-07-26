@@ -29,8 +29,8 @@ pub fn run() {
 
                         // let is_verbose = verbose_arg.value.as_str() == Some("true");
                         println!("[CLI] Verbose: {is_verbose}");
-                        if is_verbose == "true" {
-                            log::LevelFilter::Trace
+                        if is_verbose == true {
+                            log::LevelFilter::Debug
                         } else {
                             log::LevelFilter::Info
                         }
