@@ -21,9 +21,15 @@ pub fn run() {
             let log_level = match app.cli().matches() {
                 Ok(matches) => {
                     if let Some(verbose_arg) = matches.args.get("verbose") {
-                        let is_verbose = verbose_arg.value.as_str() == Some("true");
+                        let is_verbose = &matches
+                            .args
+                            .get("verbose")
+                            .expect("verbose argument not found")
+                            .value;
+
+                        // let is_verbose = verbose_arg.value.as_str() == Some("true");
                         println!("[CLI] Verbose: {is_verbose}");
-                        if is_verbose {
+                        if is_verbose == "true" {
                             log::LevelFilter::Trace
                         } else {
                             log::LevelFilter::Info
@@ -35,6 +41,7 @@ pub fn run() {
                 Err(_) => log::LevelFilter::Info,
             };
 
+            // println!("Logger init with level: {:?}", log_level);
             app.handle().plugin(
                 tauri_plugin_log::Builder::new()
                     .targets([
@@ -46,6 +53,8 @@ pub fn run() {
                     .level(log_level)
                     .build(),
             )?;
+
+            log::info!("Logger initialized with level: {:?}", log_level);
 
             Ok(())
         })
@@ -60,25 +69,25 @@ pub fn run() {
         //         .build(),
         // )
         .plugin(tauri_plugin_cli::init())
-        .setup(|app| {
-            match app.cli().matches() {
-                // `matches` here is a Struct with { args, subcommand }.
-                // `args` is `HashMap<String, ArgData>` where `ArgData` is a struct with { value, occurrences }.
-                // `subcommand` is `Option<Box<SubcommandMatches>>` where `SubcommandMatches` is a struct with { name, matches }.
-                Ok(matches) => {
-                    println!("{:?}", &matches);
-                    // let isVerbose = matches.args.get("verbose);
-                    let is_verbose = &matches
-                        .args
-                        .get("verbose")
-                        .expect("verbose argument not found")
-                        .value;
-                    println!("Verbose mode: {is_verbose}");
-                }
-                Err(_) => {}
-            }
-            Ok(())
-        })
+        // .setup(|app| {
+        //     match app.cli().matches() {
+        //         // `matches` here is a Struct with { args, subcommand }.
+        //         // `args` is `HashMap<String, ArgData>` where `ArgData` is a struct with { value, occurrences }.
+        //         // `subcommand` is `Option<Box<SubcommandMatches>>` where `SubcommandMatches` is a struct with { name, matches }.
+        //         Ok(matches) => {
+        //             println!("{:?}", &matches);
+        //             // let isVerbose = matches.args.get("verbose);
+        //             let is_verbose = &matches
+        //                 .args
+        //                 .get("verbose")
+        //                 .expect("verbose argument not found")
+        //                 .value;
+        //             println!("Verbose mode: {is_verbose}");
+        //         }
+        //         Err(_) => {}
+        //     }
+        //     Ok(())
+        // })
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
