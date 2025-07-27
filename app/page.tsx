@@ -82,6 +82,7 @@ export default function Home() {
     onNext: next,
     onPrev: prev,
     onShuffle: shuffle,
+    pickandscandir: pickAndScanFolder,
     onVolumeUp: volumeUp,
     onVolumeDown: volumeDown,
     onMute: toggleMute,

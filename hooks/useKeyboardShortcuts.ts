@@ -8,6 +8,7 @@ type ShortcutCallbacks = {
   onPrev?: () => void;
   onShuffle?: () => void;
   onVolumeUp?: () => void;
+  pickandscandir: () => void;
   onVolumeDown?: () => void;
   onMute?: () => void;
   audioRef: RefObject<HTMLAudioElement | null>;
@@ -22,6 +23,7 @@ export function useLocalKeyboardShortcuts({
   onShuffle,
   onVolumeUp,
   onVolumeDown,
+  pickandscandir,
   onMute,
   isPlaying,
   audioRef,
@@ -135,6 +137,22 @@ export function useLocalKeyboardShortcuts({
               }
             } else if (event.ctrlKey) {
               debug("Ctrl+M pressed but no mute handler registered");
+            }
+            break;
+
+          case "o":
+          case "O":
+            if (event.ctrlKey && onMute) {
+              event.preventDefault();
+              info("Open shortcut triggered");
+              try {
+                pickandscandir();
+                info("Open action completed");
+              } catch (err: any) {
+                error(`Error in mute: ${err.message}`);
+              }
+            } else if (event.ctrlKey) {
+              debug("Ctrl+O pressed but no mute handler registered");
             }
             break;
 
