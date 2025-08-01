@@ -11,7 +11,7 @@ export default function TrackCard({ cover, title, artist, onClick }: Props) {
   return (
     <Card
       onClick={onClick}
-      className="cursor-pointer group transition-all duration-200 hover:scale-[1.03] bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden  w-[280px] h-auto"
+      className="cursor-pointer group transition-all duration-200 hover:scale-[1.03] bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden  w-[290px] h-auto"
     >
       <div className="relative aspect-square w-full h-full overflow-hidden">
         {cover ? (
